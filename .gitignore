@@ -1,0 +1,9 @@
+# Atlas Project Git Ignore
+
+# Local Database
+atlas_db/
+
+# Python temporary files
+__pycache__/
+*.py[cod]
+*$py.class
