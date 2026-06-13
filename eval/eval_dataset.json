@@ -1,0 +1,53 @@
+{
+  "corpus": [
+    {"id": "doc_0", "text": "PyTorch is an open source machine learning framework based on the Torch library, used for applications such as computer vision and natural language processing."},
+    {"id": "doc_1", "text": "TensorFlow is a free and open-source software library for machine learning and artificial intelligence, developed by the Google Brain team."},
+    {"id": "doc_2", "text": "RAG, or Retrieval-Augmented Generation, is a technique that retrieves relevant documents from an external knowledge base and provides them as context to a large language model before it generates a response."},
+    {"id": "doc_3", "text": "A Cross-Encoder is a type of deep learning model that processes a query and a document together as a single input, jointly attending to both to produce a highly accurate relevance score."},
+    {"id": "doc_4", "text": "Vector databases like ChromaDB, Pinecone, and Weaviate store high-dimensional embeddings and support fast approximate nearest-neighbor similarity search over large collections of documents."},
+    {"id": "doc_5", "text": "Gradient descent is an iterative optimization algorithm used to minimize the loss function of a machine learning model by updating parameters in the direction of steepest descent."},
+    {"id": "doc_6", "text": "Transformers are a neural network architecture introduced in the paper 'Attention Is All You Need', and they form the backbone of most modern large language models."},
+    {"id": "doc_7", "text": "Ollama is a tool that allows developers to download, run, and serve open-weight large language models such as Llama 3 entirely on their local machine, without sending data to external APIs."},
+    {"id": "doc_8", "text": "A bi-encoder independently encodes a query and each document into separate vector embeddings, then compares them using cosine similarity; this is fast but less accurate than a cross-encoder."},
+    {"id": "doc_9", "text": "Two-stage retrieval pipelines first use a fast bi-encoder or BM25 retriever to fetch a broad set of candidate documents, then use a slower but more accurate cross-encoder to rerank that smaller set."},
+    {"id": "doc_10", "text": "Hallucination in large language models refers to the generation of plausible-sounding but factually incorrect or fabricated information not grounded in the provided context or training data."},
+    {"id": "doc_11", "text": "Chunking is the process of splitting long documents into smaller, semantically coherent passages before embedding them, which improves retrieval precision in RAG systems."},
+    {"id": "doc_12", "text": "Recipe for chocolate chip cookies: cream butter and sugar, add eggs and vanilla, mix in flour, baking soda, and salt, fold in chocolate chips, then bake at 375 degrees for 10 minutes."},
+    {"id": "doc_13", "text": "The Eiffel Tower is a wrought-iron lattice tower located on the Champ de Mars in Paris, France, completed in 1889 as the entrance arch for the World's Fair."},
+    {"id": "doc_14", "text": "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water."}
+  ],
+  "queries": [
+    {
+      "query": "What is Retrieval-Augmented Generation and how does it reduce hallucinations?",
+      "relevant_ids": ["doc_2", "doc_10"]
+    },
+    {
+      "query": "How does a cross-encoder differ from a bi-encoder for reranking?",
+      "relevant_ids": ["doc_3", "doc_8"]
+    },
+    {
+      "query": "Why use a two-stage retrieval pipeline instead of a single retriever?",
+      "relevant_ids": ["doc_9", "doc_3"]
+    },
+    {
+      "query": "How can I run a large language model locally without using an external API?",
+      "relevant_ids": ["doc_7"]
+    },
+    {
+      "query": "What is the role of vector databases in storing document embeddings?",
+      "relevant_ids": ["doc_4"]
+    },
+    {
+      "query": "Why is splitting documents into chunks important before embedding them?",
+      "relevant_ids": ["doc_11"]
+    },
+    {
+      "query": "What optimization algorithm is commonly used to train neural networks?",
+      "relevant_ids": ["doc_5"]
+    },
+    {
+      "query": "What architecture underlies most modern large language models?",
+      "relevant_ids": ["doc_6"]
+    }
+  ]
+}
