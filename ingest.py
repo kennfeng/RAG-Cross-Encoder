@@ -1,6 +1,5 @@
 import chromadb
 from chromadb.utils import embedding_functions
-import os
 
 class AtlasIngestor:
     def __init__(self, db_path="./atlas_db"):

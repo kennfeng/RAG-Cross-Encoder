@@ -1,7 +1,6 @@
 import ollama
 from ingest import AtlasIngestor
 from reranker import AtlasReRanker
-import sys
 
 class AtlasRAG:
     def __init__(self):
