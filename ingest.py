@@ -41,6 +41,18 @@ class AtlasIngestor:
         # Flatten the results
         return results['documents'][0]
 
+    def search_with_ids(self, query, n_results=10): 
+        """
+        Same as search(), but returns document IDs 
+        """
+        results = self.collection.quer(
+            query_texts=[query],
+            n_results=n_results
+        )
+
+        zipped = zip(results['ids'][0], results['documents'][0])
+        return list(zipped)
+
 if __name__ == "__main__":
     ingestor = AtlasIngestor()
     

@@ -36,6 +36,27 @@ class AtlasReRanker:
         ]
         
         return results
+    
+    def rerank_with_ids(self, query, candidates, top_n=3):
+        """
+        Same as rerank() but with (id, document tuples)
+        """
+        if not candidates:
+            return []
+        
+        pairs = [[query, doc] for _, doc in candidates]
+        scores = self.model.predict(pairs)
+        ranked_indices = np.argsort(scores)[::-1]
+
+        results = [
+            {
+                "id": candidates[i][0],
+                "document": candidates[i][1],
+                "score": float(scores[i]),
+            }
+            for i in ranked_indices[:top_n]
+        ]
+        return results
 
 if __name__ == "__main__":
     # Test block
