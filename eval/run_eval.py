@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 import shutil
 from ingest import AtlasIngestor
+from reranker import AtlasReRanker
 
 def load_dataset(file_path):
     with open(file_path, 'r') as f:
@@ -96,3 +97,55 @@ def main():
         text_list=[doc['text'] for doc in corpus],
         ids=[doc['id'] for doc in corpus]
     )
+
+    print("Loading cross-encoder model for re-ranking...")
+    ranker = AtlasReRanker()
+
+    retrieval_results = []
+    rerank_results = []
+
+    print(f"\nRunning evaluation on {len(queries)} queries with k={args.k} and retrieve_n={args.retrieve_n}...\n")
+
+    for item in queries:
+        query = item['query']
+        relevant_ids = set(item['relevant_ids'])
+
+        # Stage 1
+        ids_only, latency_only = run_retrieval_only(ingestor, query, args.retrieve_n)
+        ids_only_at_k = ids_only[:args.k]
+        retrieval_results.append({
+            "query": query,
+            "retrieved_ids": ids_only_at_k,
+            "precision": precision_at_k(ids_only, relevant_ids, args.k),
+            "hit_rate": hit_rate_at_k(ids_only, relevant_ids, args.k),
+            "mrr": reciprocal_rank(ids_only, relevant_ids),
+            "latency_ms": latency_only
+        })
+
+        # Stage 1 + 2
+        ids_reranked, latency_rerank = run_retrieval_only(ingestor, ranker, query, args.retrieve_n, args.k)
+        ids_reranked_at_k = ids_reranked[:args.k]
+        rerank_results.append({
+            "query": query,
+            "retrieved_ids": ids_reranked_at_k,
+            "precision": precision_at_k(ids_reranked, relevant_ids, args.k),
+            "hit_rate": hit_rate_at_k(ids_reranked, relevant_ids, args.k),
+            "mrr": reciprocal_rank(ids_reranked, relevant_ids),
+            "latency_ms": latency_rerank
+        })
+
+        print(f"Query: {query}")
+        print(f" Relavant IDs: {sorted(relevant_ids)}")
+        print(f" Retrieval Only: {ids_only_at_k})")
+        print(f" +Rerank: {ids_reranked_at_k})")
+        print()
+
+    summary_only = summarize("Retrieval Only", retrieval_results, args.k)
+    summary_rerank = summarize("Retrieval + Re-rank", rerank_results, args.k)
+
+    print("="*60)
+    print("Summary")
+    print("="*60)
+    print_table([summary_only, summary_rerank])
+
+    
