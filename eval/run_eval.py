@@ -2,6 +2,9 @@ import json
 import time
 import argparse
 from pathlib import Path
+import os
+import shutil
+from ingest import AtlasIngestor
 
 def load_dataset(file_path):
     with open(file_path, 'r') as f:
@@ -80,5 +83,16 @@ def main():
     args = parser.parse_args()
 
     data = load_dataset(args.dataset)
+    corpus = data["corpus"]
+    queries = data["queries"]
 
-    
+    if os.path.exists(args.db_path) and not args.keep_db:
+        print(f"Removing existing database at {args.db_path}...")
+        shutil.rmtree(args.db_path)
+
+    print("Initializing Ingestor and ingesting corpus...")
+    ingestor = AtlasIngestor(db_path=args.db_path)
+    ingestor.add_documents(
+        text_list=[doc['text'] for doc in corpus],
+        ids=[doc['id'] for doc in corpus]
+    )
