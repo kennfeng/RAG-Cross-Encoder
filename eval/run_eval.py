@@ -1,5 +1,7 @@
 import json
 import time
+import argparse
+from pathlib import Path
 
 def load_dataset(file_path):
     with open(file_path, 'r') as f:
@@ -66,3 +68,17 @@ def print_table(rows):
     print("-+-".join("-" * widths[header] for header in headers))
     for row in rows:
         print(fmt_row([row[header] for header in headers]))
+
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate RAG retrieval vs retrieval+re-ranking")
+    parser.add_argument("--dataset", default=Path(__file__).parent / "eval_dataset.json")
+    parser.add_argument("--k", type=int, default=3, help="Number of top results to evaluate")
+    parser.add_argument("--retrieve-n", type=int, default=10, help="Number of candidates to retrieve before re-ranking")
+    parser.add_argument("--db-path", default=Path(__file__).parent / "eval_db", help="Path to ChromaDB database directory")
+    parser.add_argument("--output", default=None, help="Path to save evaluation results as JSON")
+    parser.add_argument("--keep-db", action="store_true", help="Keep the ChromaDB database after evaluation")
+    args = parser.parse_args()
+
+    data = load_dataset(args.dataset)
+
+    
