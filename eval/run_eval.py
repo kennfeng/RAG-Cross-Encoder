@@ -148,4 +148,22 @@ def main():
     print("="*60)
     print_table([summary_only, summary_rerank])
 
+    if args.output:
+        full_results = {
+            "config": {"k": args.k, "retrieve_n": args.retrieve_n, "num_queries": len(queries)},
+            "summary": [summary_only, summary_rerank],
+            "per_query": {
+                "retrieval_only": retrieval_results,
+                "retrieval_plus_rerank": rerank_results,
+            },
+        }
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(full_results, f, indent=2)
+        print(f"\nFull results written to {args.output}")
     
+    if not args.keep_db and os.path.exists(args.db_path):
+        shutil.rmtree(args.db_path)
+    
+    
+if __name__ == "__main__":
+    main()
