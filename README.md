@@ -1,5 +1,7 @@
 # Atlas
 
+Atlas is a local, two-stage Retrieval-Augmented Generation (RAG) system.
+
 ### Prerequisites
 - [Ollama](https://ollama.com/) installed and running.
 - Python 3.10 or higher.

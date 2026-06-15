@@ -18,7 +18,7 @@ class AtlasIngestor:
 
     def add_documents(self, text_list, metadata_list=None, ids=None):
         """
-        Chunks and adds documents to the vector store.
+        Adds documents to the vector store.
         """
         if ids is None:
             ids = [f"id_{i}" for i in range(len(text_list))]
