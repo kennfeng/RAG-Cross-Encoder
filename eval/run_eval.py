@@ -6,6 +6,9 @@ import os
 import shutil
 from ingest import AtlasIngestor
 from reranker import AtlasReRanker
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 def load_dataset(file_path):
     with open(file_path, 'r') as f:
@@ -40,6 +43,14 @@ def run_retrieval_only(ingestor, query, n_results):
     elapsed_ms = (time.perf_counter() - start) * 1000
     retrieved_ids =  [doc_id for doc_id, _ in candidates]
 
+    return retrieved_ids, elapsed_ms
+
+def run_retrieval_plus_rerank(ingestor, ranker, query, n_results, top_n):
+    start = time.perf_counter()
+    candidates = ingestor.search_with_ids(query, n_results=n_results)
+    reranked = ranker.rerank_with_ids(query, candidates, top_n=top_n)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    retrieved_ids = [r["id"] for r in reranked]
     return retrieved_ids, elapsed_ms
 
 def summarize(name, per_query_results, k):
@@ -123,11 +134,10 @@ def main():
         })
 
         # Stage 1 + 2
-        ids_reranked, latency_rerank = run_retrieval_only(ingestor, ranker, query, args.retrieve_n, args.k)
-        ids_reranked_at_k = ids_reranked[:args.k]
+        ids_reranked, latency_rerank = run_retrieval_plus_rerank(ingestor, ranker, query, args.retrieve_n, args.k)
         rerank_results.append({
             "query": query,
-            "retrieved_ids": ids_reranked_at_k,
+            "retrieved_ids": ids_reranked,
             "precision": precision_at_k(ids_reranked, relevant_ids, args.k),
             "hit_rate": hit_rate_at_k(ids_reranked, relevant_ids, args.k),
             "mrr": reciprocal_rank(ids_reranked, relevant_ids),
@@ -135,9 +145,9 @@ def main():
         })
 
         print(f"Query: {query}")
-        print(f" Relavant IDs: {sorted(relevant_ids)}")
-        print(f" Retrieval Only: {ids_only_at_k})")
-        print(f" +Rerank: {ids_reranked_at_k})")
+        print(f" Relevant IDs: {sorted(relevant_ids)}")
+        print(f" Retrieval Only: {ids_only_at_k}")
+        print(f" +Rerank: {ids_reranked}")
         print()
 
     summary_only = summarize("Retrieval Only", retrieval_results, args.k)
@@ -164,6 +174,6 @@ def main():
     if not args.keep_db and os.path.exists(args.db_path):
         shutil.rmtree(args.db_path)
     
-    
+
 if __name__ == "__main__":
     main()
