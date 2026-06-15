@@ -4,11 +4,12 @@ import argparse
 from pathlib import Path
 import os
 import shutil
-from ingest import AtlasIngestor
-from reranker import AtlasReRanker
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from ingest import AtlasIngestor
+from reranker import AtlasReRanker
 
 def load_dataset(file_path):
     with open(file_path, 'r') as f:
