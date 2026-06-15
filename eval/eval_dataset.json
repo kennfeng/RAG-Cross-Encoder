@@ -14,7 +14,23 @@
     {"id": "doc_11", "text": "Chunking is the process of splitting long documents into smaller, semantically coherent passages before embedding them, which improves retrieval precision in RAG systems."},
     {"id": "doc_12", "text": "Recipe for chocolate chip cookies: cream butter and sugar, add eggs and vanilla, mix in flour, baking soda, and salt, fold in chocolate chips, then bake at 375 degrees for 10 minutes."},
     {"id": "doc_13", "text": "The Eiffel Tower is a wrought-iron lattice tower located on the Champ de Mars in Paris, France, completed in 1889 as the entrance arch for the World's Fair."},
-    {"id": "doc_14", "text": "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water."}
+    {"id": "doc_14", "text": "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water."},
+    {"id": "doc_15", "text": "Semantic search retrieves documents based on the meaning of a query rather than exact keyword matches, typically by comparing vector embeddings of the query and documents using cosine similarity."},
+    {"id": "doc_16", "text": "TF-IDF (Term Frequency-Inverse Document Frequency) is a classic information retrieval technique that scores documents based on how often a term appears in a document relative to how common it is across the entire corpus."},
+    {"id": "doc_17", "text": "BM25 is a keyword-based ranking algorithm widely used in search engines; it scores documents by term frequency and document length but does not capture semantic meaning the way embedding-based methods do."},
+    {"id": "doc_18", "text": "Tokenization is the process of splitting raw text into smaller units called tokens, such as words or subwords, which are then converted into numerical IDs that a language model can process."},
+    {"id": "doc_19", "text": "Backpropagation is the algorithm used to compute gradients of the loss function with respect to each weight in a neural network by applying the chain rule, layer by layer, from the output back to the input."},
+    {"id": "doc_20", "text": "Adam is an adaptive learning rate optimization algorithm that combines momentum and per-parameter learning rate scaling, and is one of the most commonly used optimizers for training deep neural networks."},
+    {"id": "doc_21", "text": "Recurrent Neural Networks (RNNs) and their variant LSTMs process sequences one element at a time while maintaining a hidden state, but they struggle with long-range dependencies compared to attention-based architectures."},
+    {"id": "doc_22", "text": "The attention mechanism allows a model to weigh the importance of different tokens in a sequence relative to each other when computing a representation, and is the core component that enables transformers to process sequences in parallel."},
+    {"id": "doc_23", "text": "Cloud-based LLM APIs such as OpenAI's API or Anthropic's API allow developers to send prompts to large models hosted on remote servers, offering powerful capabilities without managing infrastructure, but requiring an internet connection and sending data externally."},
+    {"id": "doc_24", "text": "Fine-tuning adapts a pretrained language model to a specific task or domain by continuing training on a smaller, task-specific dataset, whereas prompting steers a frozen model's behavior purely through the input text at inference time."},
+    {"id": "doc_25", "text": "Sentence embedding models such as those from the sentence-transformers library convert text into dense vector representations that capture semantic meaning, enabling tasks like similarity search and clustering."},
+    {"id": "doc_26", "text": "Knowledge graphs represent information as entities and relationships in a structured graph format, and can be used to ground LLM responses in verified facts as an alternative or complement to retrieval-augmented generation."},
+    {"id": "doc_27", "text": "In retrieval systems, there is often a tradeoff between latency and accuracy: fast approximate methods like vector search can run in milliseconds, while more accurate methods like cross-encoder reranking take significantly longer per query."},
+    {"id": "doc_28", "text": "Overfitting occurs when a machine learning model learns the training data too closely, including its noise, resulting in poor generalization to new, unseen data; common remedies include regularization, dropout, and early stopping."},
+    {"id": "doc_29", "text": "Quantization reduces the precision of a model's weights, for example from 16-bit floating point to 4-bit integers, which shrinks the model's memory footprint and speeds up inference, making it practical to run large language models locally."},
+    {"id": "doc_30", "text": "The Great Barrier Reef, located off the coast of Australia, is the world's largest coral reef system and is composed of over 2,900 individual reefs."}
   ],
   "queries": [
     {
@@ -27,15 +43,15 @@
     },
     {
       "query": "Why use a two-stage retrieval pipeline instead of a single retriever?",
-      "relevant_ids": ["doc_9", "doc_3"]
+      "relevant_ids": ["doc_9", "doc_3", "doc_27"]
     },
     {
       "query": "How can I run a large language model locally without using an external API?",
-      "relevant_ids": ["doc_7"]
+      "relevant_ids": ["doc_7", "doc_29"]
     },
     {
       "query": "What is the role of vector databases in storing document embeddings?",
-      "relevant_ids": ["doc_4"]
+      "relevant_ids": ["doc_4", "doc_25"]
     },
     {
       "query": "Why is splitting documents into chunks important before embedding them?",
@@ -43,11 +59,39 @@
     },
     {
       "query": "What optimization algorithm is commonly used to train neural networks?",
-      "relevant_ids": ["doc_5"]
+      "relevant_ids": ["doc_5", "doc_20"]
     },
     {
       "query": "What architecture underlies most modern large language models?",
-      "relevant_ids": ["doc_6"]
+      "relevant_ids": ["doc_6", "doc_22"]
+    },
+    {
+      "query": "What's the difference between keyword-based search like BM25 and embedding-based semantic search?",
+      "relevant_ids": ["doc_17", "doc_15"]
+    },
+    {
+      "query": "How does the attention mechanism help transformers process sequences differently than RNNs?",
+      "relevant_ids": ["doc_22", "doc_21"]
+    },
+    {
+      "query": "What is backpropagation and how does it relate to optimizers like Adam during training?",
+      "relevant_ids": ["doc_19", "doc_20"]
+    },
+    {
+      "query": "What causes a model to memorize training data instead of generalizing, and how is that different from generating false information?",
+      "relevant_ids": ["doc_28", "doc_10"]
+    },
+    {
+      "query": "Besides retrieval-augmented generation, what is another way to ground LLM outputs in factual information?",
+      "relevant_ids": ["doc_26"]
+    },
+    {
+      "query": "How does quantization make it practical to run large language models on local hardware?",
+      "relevant_ids": ["doc_29", "doc_7"]
+    },
+    {
+      "query": "What is the latency tradeoff between fast vector search and accurate cross-encoder reranking?",
+      "relevant_ids": ["doc_27", "doc_9"]
     }
   ]
 }
