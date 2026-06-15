@@ -3,6 +3,9 @@
 # Local Database
 atlas_db/
 
+# Eval Database
+eval_db/
+
 # Python temporary files
 __pycache__/
 *.py[cod]

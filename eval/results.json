@@ -1,0 +1,223 @@
+{
+  "config": {
+    "k": 3,
+    "retrieve_n": 10,
+    "num_queries": 8
+  },
+  "summary": [
+    {
+      "name": "Retrieval Only",
+      "avg_hit_rate": 1.0,
+      "avg_precision": 0.41666666666666663,
+      "avg_mrr": 1.0,
+      "avg_latency_ms": 74.64845000504283,
+      "k": 3
+    },
+    {
+      "name": "Retrieval + Re-rank",
+      "avg_hit_rate": 1.0,
+      "avg_precision": 0.41666666666666663,
+      "avg_mrr": 1.0,
+      "avg_latency_ms": 568.2254375060438,
+      "k": 3
+    }
+  ],
+  "per_query": {
+    "retrieval_only": [
+      {
+        "query": "What is Retrieval-Augmented Generation and how does it reduce hallucinations?",
+        "retrieved_ids": [
+          "doc_2",
+          "doc_10",
+          "doc_9"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 140.82129998132586
+      },
+      {
+        "query": "How does a cross-encoder differ from a bi-encoder for reranking?",
+        "retrieved_ids": [
+          "doc_3",
+          "doc_8",
+          "doc_9"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 59.866499970667064
+      },
+      {
+        "query": "Why use a two-stage retrieval pipeline instead of a single retriever?",
+        "retrieved_ids": [
+          "doc_9",
+          "doc_11",
+          "doc_2"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 57.597899984102696
+      },
+      {
+        "query": "How can I run a large language model locally without using an external API?",
+        "retrieved_ids": [
+          "doc_7",
+          "doc_6",
+          "doc_10"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 69.11250000121072
+      },
+      {
+        "query": "What is the role of vector databases in storing document embeddings?",
+        "retrieved_ids": [
+          "doc_4",
+          "doc_8",
+          "doc_3"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 74.75940004223958
+      },
+      {
+        "query": "Why is splitting documents into chunks important before embedding them?",
+        "retrieved_ids": [
+          "doc_11",
+          "doc_9",
+          "doc_4"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 66.33380003040656
+      },
+      {
+        "query": "What optimization algorithm is commonly used to train neural networks?",
+        "retrieved_ids": [
+          "doc_5",
+          "doc_1",
+          "doc_6"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 62.07060004817322
+      },
+      {
+        "query": "What architecture underlies most modern large language models?",
+        "retrieved_ids": [
+          "doc_6",
+          "doc_10",
+          "doc_7"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 66.62559998221695
+      }
+    ],
+    "retrieval_plus_rerank": [
+      {
+        "query": "What is Retrieval-Augmented Generation and how does it reduce hallucinations?",
+        "retrieved_ids": [
+          "doc_2",
+          "doc_10",
+          "doc_11"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 1077.8358000097796
+      },
+      {
+        "query": "How does a cross-encoder differ from a bi-encoder for reranking?",
+        "retrieved_ids": [
+          "doc_8",
+          "doc_9",
+          "doc_3"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 507.05449999077246
+      },
+      {
+        "query": "Why use a two-stage retrieval pipeline instead of a single retriever?",
+        "retrieved_ids": [
+          "doc_9",
+          "doc_2",
+          "doc_11"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 460.7038000249304
+      },
+      {
+        "query": "How can I run a large language model locally without using an external API?",
+        "retrieved_ids": [
+          "doc_7",
+          "doc_2",
+          "doc_10"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 477.7197999646887
+      },
+      {
+        "query": "What is the role of vector databases in storing document embeddings?",
+        "retrieved_ids": [
+          "doc_4",
+          "doc_8",
+          "doc_11"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 563.308400043752
+      },
+      {
+        "query": "Why is splitting documents into chunks important before embedding them?",
+        "retrieved_ids": [
+          "doc_11",
+          "doc_8",
+          "doc_4"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 478.37070003151894
+      },
+      {
+        "query": "What optimization algorithm is commonly used to train neural networks?",
+        "retrieved_ids": [
+          "doc_5",
+          "doc_6",
+          "doc_1"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 517.8489999962039
+      },
+      {
+        "query": "What architecture underlies most modern large language models?",
+        "retrieved_ids": [
+          "doc_6",
+          "doc_10",
+          "doc_7"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 462.96149998670444
+      }
+    ]
+  }
+}

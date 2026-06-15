@@ -173,8 +173,17 @@ def main():
         print(f"\nFull results written to {args.output}")
     
     if not args.keep_db and os.path.exists(args.db_path):
-        shutil.rmtree(args.db_path)
-    
+        # Release ChromaDB's file handles before attempting to delete on Windows
+        del ingestor
+        del ranker
+        import gc
+        gc.collect()
+
+        try:
+            shutil.rmtree(args.db_path)
+        except PermissionError as e:
+            print(f"\nWarning: could not remove {args.db_path} ({e}).")
+
 
 if __name__ == "__main__":
     main()

@@ -16,11 +16,12 @@ class AtlasIngestor:
             embedding_function=self.emb_fn
         )
 
-    def add_documents(self, text_list, metadata_list=None):
+    def add_documents(self, text_list, metadata_list=None, ids=None):
         """
         Chunks and adds documents to the vector store.
         """
-        ids = [f"id_{i}" for i in range(len(text_list))]
+        if ids is None:
+            ids = [f"id_{i}" for i in range(len(text_list))]
         self.collection.add(
             documents=text_list,
             metadatas=metadata_list,
@@ -40,17 +41,15 @@ class AtlasIngestor:
         # Flatten the results
         return results['documents'][0]
 
-    def search_with_ids(self, query, n_results=10): 
+    def search_with_ids(self, query, n_results=10):
         """
-        Same as search(), but returns document IDs 
+        Same as search(), but returns document IDs
         """
-        results = self.collection.quer(
+        results = self.collection.query(
             query_texts=[query],
             n_results=n_results
         )
-
-        zipped = zip(results['ids'][0], results['documents'][0])
-        return list(zipped)
+        return list(zip(results['ids'][0], results['documents'][0]))
 
 if __name__ == "__main__":
     ingestor = AtlasIngestor()
