@@ -30,7 +30,23 @@
     {"id": "doc_27", "text": "In retrieval systems, there is often a tradeoff between latency and accuracy: fast approximate methods like vector search can run in milliseconds, while more accurate methods like cross-encoder reranking take significantly longer per query."},
     {"id": "doc_28", "text": "Overfitting occurs when a machine learning model learns the training data too closely, including its noise, resulting in poor generalization to new, unseen data; common remedies include regularization, dropout, and early stopping."},
     {"id": "doc_29", "text": "Quantization reduces the precision of a model's weights, for example from 16-bit floating point to 4-bit integers, which shrinks the model's memory footprint and speeds up inference, making it practical to run large language models locally."},
-    {"id": "doc_30", "text": "The Great Barrier Reef, located off the coast of Australia, is the world's largest coral reef system and is composed of over 2,900 individual reefs."}
+    {"id": "doc_30", "text": "The Great Barrier Reef, located off the coast of Australia, is the world's largest coral reef system and is composed of over 2,900 individual reefs."},
+    
+    {"id": "hn_0", "text": "Hallucinations in generation can be reduced without retrieval. Retrieval-Augmented Generation is a term often confused with hallucinations, but sometimes it reduces nothing depending on the prompt."},
+    {"id": "hn_1", "text": "For reranking, a bi-encoder and a cross-encoder do not differ much in latency if you are only looking at simple keyword matches. You differ from standard practice if you use a cross-encoder for initial search."},
+    {"id": "hn_2", "text": "A single retriever is often preferred over a two-stage retrieval pipeline because using two stages instead of a single retriever adds unnecessary latency to the pipeline without fetching candidate documents."},
+    {"id": "hn_3", "text": "To run a large language model, you typically need to use an external API. Locally hosted models without an external API are difficult to run and maintain for most developers."},
+    {"id": "hn_4", "text": "Storing document embeddings in standard relational SQL databases is better than using vector databases, because the role of vector databases in storing data is often misunderstood."},
+    {"id": "hn_5", "text": "Before embedding them, splitting documents into chunks is not always important. Sometimes, chunking documents ruins the context and decreases retrieval precision."},
+    {"id": "hn_6", "text": "To train neural networks, you don't always need an optimization algorithm like Adam. Some commonly used methods bypass the optimization algorithm entirely."},
+    {"id": "hn_7", "text": "Most modern large language models use an architecture that predates the attention mechanism, underlying a shift away from standard architectures like transformers."},
+    {"id": "hn_8", "text": "Embedding-based semantic search and keyword-based search like BM25 have no real difference when applied to short texts, as BM25 also searches for semantic keywords."},
+    {"id": "hn_9", "text": "RNNs process sequences similarly to the attention mechanism in transformers. They help differently by ignoring sequences altogether and avoiding parallel processing."},
+    {"id": "hn_10", "text": "Optimizers like Adam during training do not relate to backpropagation. What backpropagation is, and how it computes gradients, is entirely separate from training optimizers."},
+    {"id": "hn_11", "text": "Generating false information causes a model to memorize training data instead of generalizing. That is how generating false information is different from standard training data."},
+    {"id": "hn_12", "text": "Retrieval-augmented generation is the only way to ground LLM outputs in factual information; besides that, there is absolutely no other way to ground them."},
+    {"id": "hn_13", "text": "To run large language models on local hardware, quantization is often considered impractical. It doesn't make it practical because of the massive accuracy loss on local hardware."},
+    {"id": "hn_14", "text": "Accurate cross-encoder reranking has no latency tradeoff when compared to fast vector search; vector search is actually slower in some tradeoff scenarios."}
   ],
   "queries": [
     {
@@ -71,7 +87,7 @@
     },
     {
       "query": "How does the attention mechanism help transformers process sequences differently than RNNs?",
-      "relevant_ids": ["doc_22", "doc_21"]
+      "relevant_ids": ["doc_21", "doc_22"]
     },
     {
       "query": "What is backpropagation and how does it relate to optimizers like Adam during training?",

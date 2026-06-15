@@ -1,24 +1,24 @@
 {
   "config": {
     "k": 3,
-    "retrieve_n": 10,
+    "retrieve_n": 25,
     "num_queries": 15
   },
   "summary": [
     {
       "name": "Retrieval Only",
       "avg_hit_rate": 1.0,
-      "avg_precision": 0.5333333333333333,
-      "avg_mrr": 1.0,
-      "avg_latency_ms": 66.7143066607726,
+      "avg_precision": 0.4666666666666667,
+      "avg_mrr": 0.4666666666666667,
+      "avg_latency_ms": 95.47719332234313,
       "k": 3
     },
     {
       "name": "Retrieval + Re-rank",
       "avg_hit_rate": 1.0,
-      "avg_precision": 0.5555555555555555,
-      "avg_mrr": 1.0,
-      "avg_latency_ms": 507.0751466633131,
+      "avg_precision": 0.4444444444444444,
+      "avg_mrr": 0.7333333333333333,
+      "avg_latency_ms": 6591.816339998816,
       "k": 3
     }
   ],
@@ -27,182 +27,182 @@
       {
         "query": "What is Retrieval-Augmented Generation and how does it reduce hallucinations?",
         "retrieved_ids": [
+          "hn_0",
           "doc_2",
-          "doc_10",
-          "doc_22"
+          "doc_10"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 58.516699995379895
+        "mrr": 0.5,
+        "latency_ms": 134.4884999562055
       },
       {
         "query": "How does a cross-encoder differ from a bi-encoder for reranking?",
         "retrieved_ids": [
-          "doc_3",
-          "doc_8",
-          "doc_27"
+          "hn_1",
+          "hn_14",
+          "doc_3"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 76.18419994832948
+        "mrr": 0.3333333333333333,
+        "latency_ms": 234.21540000708774
       },
       {
         "query": "Why use a two-stage retrieval pipeline instead of a single retriever?",
         "retrieved_ids": [
+          "hn_2",
           "doc_9",
-          "doc_27",
-          "doc_11"
+          "doc_27"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 69.13740001618862
+        "mrr": 0.5,
+        "latency_ms": 126.39989994931966
       },
       {
         "query": "How can I run a large language model locally without using an external API?",
         "retrieved_ids": [
-          "doc_7",
-          "doc_23",
-          "doc_29"
+          "hn_3",
+          "hn_13",
+          "doc_7"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 53.49140003090724
+        "mrr": 0.3333333333333333,
+        "latency_ms": 98.2792999711819
       },
       {
         "query": "What is the role of vector databases in storing document embeddings?",
         "retrieved_ids": [
+          "hn_4",
           "doc_4",
-          "doc_8",
-          "doc_15"
+          "doc_8"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 62.47090001124889
+        "mrr": 0.5,
+        "latency_ms": 133.29750002594665
       },
       {
         "query": "Why is splitting documents into chunks important before embedding them?",
         "retrieved_ids": [
+          "hn_5",
           "doc_11",
-          "doc_9",
-          "doc_4"
+          "hn_4"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 56.49659998016432
+        "mrr": 0.5,
+        "latency_ms": 65.89819997316226
       },
       {
         "query": "What optimization algorithm is commonly used to train neural networks?",
         "retrieved_ids": [
+          "hn_6",
           "doc_5",
-          "doc_20",
-          "doc_19"
+          "doc_20"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 44.549699989147484
+        "mrr": 0.5,
+        "latency_ms": 94.103500014171
       },
       {
         "query": "What architecture underlies most modern large language models?",
         "retrieved_ids": [
-          "doc_6",
-          "doc_29",
-          "doc_10"
+          "hn_7",
+          "hn_3",
+          "doc_6"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 115.66889996174723
+        "mrr": 0.3333333333333333,
+        "latency_ms": 69.717500009574
       },
       {
         "query": "What's the difference between keyword-based search like BM25 and embedding-based semantic search?",
         "retrieved_ids": [
+          "hn_8",
           "doc_17",
-          "doc_15",
-          "doc_8"
+          "doc_15"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 70.59349998598918
+        "mrr": 0.5,
+        "latency_ms": 81.54699997976422
       },
       {
         "query": "How does the attention mechanism help transformers process sequences differently than RNNs?",
         "retrieved_ids": [
+          "hn_9",
           "doc_22",
-          "doc_6",
-          "doc_21"
+          "doc_6"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 63.242900010664016
+        "mrr": 0.5,
+        "latency_ms": 71.25719997566193
       },
       {
         "query": "What is backpropagation and how does it relate to optimizers like Adam during training?",
         "retrieved_ids": [
+          "hn_10",
           "doc_19",
-          "doc_20",
-          "doc_5"
+          "doc_20"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 70.01630001468584
+        "mrr": 0.5,
+        "latency_ms": 74.32219997281209
       },
       {
         "query": "What causes a model to memorize training data instead of generalizing, and how is that different from generating false information?",
         "retrieved_ids": [
+          "hn_11",
           "doc_10",
-          "doc_28",
-          "doc_24"
+          "doc_28"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 62.4070999911055
+        "mrr": 0.5,
+        "latency_ms": 65.35290001193061
       },
       {
         "query": "Besides retrieval-augmented generation, what is another way to ground LLM outputs in factual information?",
         "retrieved_ids": [
+          "hn_12",
           "doc_26",
-          "doc_2",
-          "doc_10"
+          "doc_2"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 71.93499995628372
+        "mrr": 0.5,
+        "latency_ms": 66.5142999496311
       },
       {
         "query": "How does quantization make it practical to run large language models on local hardware?",
         "retrieved_ids": [
+          "hn_13",
           "doc_29",
-          "doc_6",
-          "doc_24"
+          "hn_3"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 70.31540002208203
+        "mrr": 0.5,
+        "latency_ms": 58.06740000844002
       },
       {
         "query": "What is the latency tradeoff between fast vector search and accurate cross-encoder reranking?",
         "retrieved_ids": [
+          "hn_14",
           "doc_27",
-          "doc_3",
-          "doc_8"
+          "hn_1"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 55.68859999766573
+        "mrr": 0.5,
+        "latency_ms": 58.6971000302583
       }
     ],
     "retrieval_plus_rerank": [
@@ -210,181 +210,181 @@
         "query": "What is Retrieval-Augmented Generation and how does it reduce hallucinations?",
         "retrieved_ids": [
           "doc_2",
-          "doc_10",
-          "doc_11"
-        ],
-        "precision": 0.6666666666666666,
-        "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 477.94000001158565
-      },
-      {
-        "query": "How does a cross-encoder differ from a bi-encoder for reranking?",
-        "retrieved_ids": [
-          "doc_8",
-          "doc_9",
-          "doc_27"
+          "hn_0",
+          "hn_12"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
         "mrr": 1.0,
-        "latency_ms": 457.97799999127164
+        "latency_ms": 6905.7208999875
+      },
+      {
+        "query": "How does a cross-encoder differ from a bi-encoder for reranking?",
+        "retrieved_ids": [
+          "hn_1",
+          "doc_8",
+          "doc_3"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 0.5,
+        "latency_ms": 7124.080499983393
       },
       {
         "query": "Why use a two-stage retrieval pipeline instead of a single retriever?",
         "retrieved_ids": [
+          "hn_2",
           "doc_9",
-          "doc_2",
           "doc_27"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 570.9551000036299
+        "mrr": 0.5,
+        "latency_ms": 7707.66040001763
       },
       {
         "query": "How can I run a large language model locally without using an external API?",
         "retrieved_ids": [
+          "hn_3",
           "doc_7",
-          "doc_29",
-          "doc_23"
+          "doc_29"
         ],
         "precision": 0.6666666666666666,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 540.8974000019953
+        "mrr": 0.5,
+        "latency_ms": 7370.248099963646
       },
       {
         "query": "What is the role of vector databases in storing document embeddings?",
         "retrieved_ids": [
           "doc_4",
-          "doc_8",
-          "doc_15"
+          "hn_4",
+          "doc_27"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
         "mrr": 1.0,
-        "latency_ms": 480.852100008633
+        "latency_ms": 6365.435599989723
       },
       {
         "query": "Why is splitting documents into chunks important before embedding them?",
         "retrieved_ids": [
+          "hn_5",
           "doc_11",
-          "doc_8",
-          "doc_4"
+          "doc_22"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 383.002899994608
+        "mrr": 0.5,
+        "latency_ms": 8242.093400040176
       },
       {
         "query": "What optimization algorithm is commonly used to train neural networks?",
         "retrieved_ids": [
           "doc_20",
-          "doc_19",
-          "doc_5"
+          "hn_6",
+          "doc_27"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
         "mrr": 1.0,
-        "latency_ms": 796.9325000303797
+        "latency_ms": 7647.493700031191
       },
       {
         "query": "What architecture underlies most modern large language models?",
         "retrieved_ids": [
           "doc_6",
-          "doc_10",
-          "doc_29"
+          "hn_7",
+          "hn_3"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
         "mrr": 1.0,
-        "latency_ms": 486.7986000026576
+        "latency_ms": 6711.833400011528
       },
       {
         "query": "What's the difference between keyword-based search like BM25 and embedding-based semantic search?",
         "retrieved_ids": [
+          "hn_8",
           "doc_17",
-          "doc_15",
-          "doc_25"
+          "doc_9"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 490.6518000061624
+        "mrr": 0.5,
+        "latency_ms": 7016.95269998163
       },
       {
         "query": "How does the attention mechanism help transformers process sequences differently than RNNs?",
         "retrieved_ids": [
           "doc_22",
-          "doc_21",
-          "doc_6"
-        ],
-        "precision": 0.6666666666666666,
-        "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 414.89469999214634
-      },
-      {
-        "query": "What is backpropagation and how does it relate to optimizers like Adam during training?",
-        "retrieved_ids": [
-          "doc_20",
-          "doc_19",
-          "doc_5"
-        ],
-        "precision": 0.6666666666666666,
-        "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 448.6171000171453
-      },
-      {
-        "query": "What causes a model to memorize training data instead of generalizing, and how is that different from generating false information?",
-        "retrieved_ids": [
-          "doc_28",
-          "doc_10",
-          "doc_24"
-        ],
-        "precision": 0.6666666666666666,
-        "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 679.7131999628618
-      },
-      {
-        "query": "Besides retrieval-augmented generation, what is another way to ground LLM outputs in factual information?",
-        "retrieved_ids": [
-          "doc_26",
-          "doc_2",
-          "doc_9"
+          "hn_9",
+          "hn_7"
         ],
         "precision": 0.3333333333333333,
         "hit_rate": 1.0,
         "mrr": 1.0,
-        "latency_ms": 453.7817999953404
+        "latency_ms": 5757.883700018283
+      },
+      {
+        "query": "What is backpropagation and how does it relate to optimizers like Adam during training?",
+        "retrieved_ids": [
+          "doc_19",
+          "hn_10",
+          "doc_20"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 1.0,
+        "latency_ms": 5593.398899945896
+      },
+      {
+        "query": "What causes a model to memorize training data instead of generalizing, and how is that different from generating false information?",
+        "retrieved_ids": [
+          "hn_11",
+          "doc_28",
+          "doc_10"
+        ],
+        "precision": 0.6666666666666666,
+        "hit_rate": 1.0,
+        "mrr": 0.5,
+        "latency_ms": 5471.417099994142
+      },
+      {
+        "query": "Besides retrieval-augmented generation, what is another way to ground LLM outputs in factual information?",
+        "retrieved_ids": [
+          "hn_12",
+          "doc_26",
+          "doc_2"
+        ],
+        "precision": 0.3333333333333333,
+        "hit_rate": 1.0,
+        "mrr": 0.5,
+        "latency_ms": 6116.889600001741
       },
       {
         "query": "How does quantization make it practical to run large language models on local hardware?",
         "retrieved_ids": [
           "doc_29",
-          "doc_7",
-          "doc_10"
+          "hn_13",
+          "hn_3"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
         "mrr": 1.0,
-        "latency_ms": 405.60929995262995
+        "latency_ms": 5136.079100018833
       },
       {
         "query": "What is the latency tradeoff between fast vector search and accurate cross-encoder reranking?",
         "retrieved_ids": [
+          "hn_14",
           "doc_27",
-          "doc_9",
-          "doc_8"
+          "hn_1"
         ],
-        "precision": 0.6666666666666666,
+        "precision": 0.3333333333333333,
         "hit_rate": 1.0,
-        "mrr": 1.0,
-        "latency_ms": 517.5026999786496
+        "mrr": 0.5,
+        "latency_ms": 5710.057999996934
       }
     ]
   }

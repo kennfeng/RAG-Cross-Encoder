@@ -173,7 +173,7 @@ def main():
         print(f"\nFull results written to {args.output}")
     
     if not args.keep_db and os.path.exists(args.db_path):
-        # Release ChromaDB's file handles before attempting to delete on Windows
+        # Release ChromaDB's file handles before attempting to delete
         del ingestor
         del ranker
         import gc

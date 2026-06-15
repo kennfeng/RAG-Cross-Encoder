@@ -3,7 +3,7 @@ from sentence_transformers import CrossEncoder
 import numpy as np
 
 class AtlasReRanker:
-    def __init__(self, model_name='cross-encoder/ms-marco-MiniLM-L-6-v2'):
+    def __init__(self, model_name='BAAI/bge-reranker-base'):
         """
         Initializes a PyTorch-based Cross-Encoder.
         This model takes a Query, Document pair and outputs a relevancy score.
