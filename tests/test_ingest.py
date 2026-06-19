@@ -26,3 +26,33 @@ def test_add_documents_with_custom_ids():
         metadatas=None,
         ids=["custom_id_1", "custom_id_2"],
     )
+
+def test_search_returns_documents():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(return_value={
+        'documents': [["doc1", "doc2"]],
+        'ids': [["id_0", "id_1"]]
+    })
+
+    results = ingestor.search("query")
+    assert results == ["doc1", "doc2"]
+
+def test_search_with_ids_returns_ids_and_documents():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(return_value={
+        'documents': [["doc1", "doc2"]],
+        'ids': [["id_0", "id_1"]]
+    })
+
+    results = ingestor.search_with_ids("query")
+    assert results == [("id_0", "doc1"), ("id_1", "doc2")]
+
+def test_search_with_ids_empty_results():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(return_value={
+        'documents': [[]],
+        'ids': [[]]
+    })
+
+    results = ingestor.search_with_ids("query")
+    assert results == []
