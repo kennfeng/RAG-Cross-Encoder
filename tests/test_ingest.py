@@ -27,6 +27,20 @@ def test_add_documents_with_custom_ids():
         ids=["custom_id_1", "custom_id_2"],
     )
 
+
+def test_add_documents_forwards_metadata_when_present():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.add = MagicMock()
+
+    metadata = [{"source": "a"}, {"source": "b"}]
+    ingestor.add_documents(["doc1", "doc2"], metadata_list=metadata)
+    ingestor.collection.add.assert_called_once_with(
+        documents=["doc1", "doc2"],
+        metadatas=metadata,
+        ids=["id_0", "id_1"],
+    )
+
+
 def test_search_returns_documents():
     ingestor = make_mock_ingestor()
     ingestor.collection.query = MagicMock(return_value={
@@ -36,6 +50,17 @@ def test_search_returns_documents():
 
     results = ingestor.search("query")
     assert results == ["doc1", "doc2"]
+
+
+def test_search_returns_empty_list_when_no_documents():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(return_value={
+        'documents': [[]],
+        'ids': [[]]
+    })
+
+    results = ingestor.search("query")
+    assert results == []
 
 def test_search_with_ids_returns_ids_and_documents():
     ingestor = make_mock_ingestor()
