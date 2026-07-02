@@ -1,8 +1,10 @@
 from reranker import AtlasReRanker
 import numpy as np
 
+
 def make_reranker():
     return AtlasReRanker()
+
 
 def test_rerank_orders_documents_by_descending():
     reranker = make_reranker()
@@ -45,4 +47,3 @@ def test_rerank_with_ids_returns_empty_list_for_no_candidates():
     reranker = make_reranker()
     results = reranker.rerank_with_ids("query", [], top_n=3)
     assert results == []
-    
