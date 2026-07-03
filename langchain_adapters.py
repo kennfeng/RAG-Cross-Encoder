@@ -26,8 +26,19 @@ class CrossEncoderRerankerAdapter:
 class OllamaLLMWrapper:
     def __init__(self, model_name="llama3.2:1b", client=None):
         self.model_name = model_name
-        self.client = client or ChatOllama(model=self.model_name)
+        try:
+            self.client = client or ChatOllama(model=self.model_name)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to initialize Ollama client for model '{self.model_name}'. "
+                "Ensure Ollama is running and the model name is valid."
+            ) from exc
 
     def chat(self, prompt):
-        response = self.client.invoke([HumanMessage(content=prompt)])
+        try:
+            response = self.client.invoke([HumanMessage(content=prompt)])
+        except Exception as exc:
+            raise RuntimeError(
+                "Ollama invocation failed. Ensure Ollama is reachable and the prompt is valid."
+            ) from exc
         return response.content
