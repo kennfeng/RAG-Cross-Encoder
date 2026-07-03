@@ -4,14 +4,21 @@ from reranker import AtlasReRanker
 
 
 class AtlasRAG:
-    def __init__(self):
+    def __init__(
+        self,
+        ingestor=None,
+        ranker=None,
+        model=None,
+        llm_client=None,
+        sample_docs=None,
+    ):
         print("--- Initializing RAG System ---")
-        self.ingestor = AtlasIngestor()
+        self.ingestor = ingestor or AtlasIngestor()
 
         # Check if DB is empty and add sample data if it is
         if self.ingestor.collection.count() == 0:
             print("[INFO]: DB is empty. Loading sample ML knowledge base...")
-            sample_kb = [
+            sample_kb = sample_docs or [
                 "PyTorch is an open source machine learning framework based on the Torch library.",
                 "TensorFlow is a free and open-source software library for machine learning and artificial intelligence.",
                 "RAG stands for Retrieval-Augmented Generation, a technique to provide external data to LLMs.",
@@ -22,8 +29,9 @@ class AtlasRAG:
             ]
             self.ingestor.add_documents(sample_kb)
 
-        self.ranker = AtlasReRanker()
-        self.model = "llama3.2:1b"
+        self.ranker = ranker or AtlasReRanker()
+        self.model = model or "llama3.2:1b"
+        self.llm_client = llm_client or ollama
 
     def ask(self, query):
         print(f"\n[QUERY]: {query}")
