@@ -1,5 +1,6 @@
 import ollama
 from ingest import AtlasIngestor
+from rag_pipeline import LangChainRAG
 from reranker import AtlasReRanker
 
 
@@ -58,7 +59,7 @@ class AtlasRAG:
         prompt = f"Context:\n{context_text}\n\nQuestion: {query}\n\nAnswer concisely based on the context:"
 
         try:
-            response = ollama.chat(
+            response = self.llm_client.chat(
                 model=self.model, messages=[{"role": "user", "content": prompt}]
             )
             return {
@@ -73,7 +74,7 @@ class AtlasRAG:
 
 
 if __name__ == "__main__":
-    rag = AtlasRAG()
+    rag = LangChainRAG.from_defaults()
     while True:
         try:
             user_input = input("\nAsk Atlas (or type 'exit'): ")
