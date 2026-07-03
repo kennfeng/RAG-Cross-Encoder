@@ -17,7 +17,13 @@ class AtlasReRanker:
         print(f"Loading PyTorch Re-ranker model: {model_name}...")
         # Check for GPU availability
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = CrossEncoder(model_name, device=self.device)
+        try:
+            self.model = CrossEncoder(model_name, device=self.device)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to load cross-encoder model '{model_name}'. "
+                "Check network access, Hugging Face cache, and model name."
+            ) from exc
         print(f"Model loaded on {self.device}")
 
     def rerank(self, query, documents, top_n=3):
