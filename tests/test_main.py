@@ -41,6 +41,28 @@ def test_ask_returns_message_when_no_candidates(
     mock_ollama.chat.assert_not_called()
 
 
+def test_init_loads_sample_data_when_db_is_empty(
+    mock_ingestor, mock_ranker, mock_ollama
+):
+    mock_ingestor.collection.count.return_value = 0
+
+    rag = AtlasRAG()
+
+    mock_ingestor.add_documents.assert_called_once()
+    assert rag.ingestor is mock_ingestor
+
+
+def test_init_skips_sample_data_when_db_is_not_empty(
+    mock_ingestor, mock_ranker, mock_ollama
+):
+    mock_ingestor.collection.count.return_value = 1
+
+    rag = AtlasRAG()
+
+    mock_ingestor.add_documents.assert_not_called()
+    assert rag.ingestor is mock_ingestor
+
+
 def test_ask_reranks_candidates_and_returns_ollama_response(
     mock_ingestor, mock_ranker, mock_ollama
 ):

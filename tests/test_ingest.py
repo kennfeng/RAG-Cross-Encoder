@@ -53,6 +53,20 @@ def test_search_returns_documents():
     assert results == ["doc1", "doc2"]
 
 
+def test_search_passes_query_texts_and_n_results():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(
+        return_value={"documents": [["doc1"]], "ids": [["id_0"]]}
+    )
+
+    results = ingestor.search("query", n_results=5)
+
+    ingestor.collection.query.assert_called_once_with(
+        query_texts=["query"], n_results=5
+    )
+    assert results == ["doc1"]
+
+
 def test_search_returns_empty_list_when_no_documents():
     ingestor = make_mock_ingestor()
     ingestor.collection.query = MagicMock(return_value={"documents": [[]], "ids": [[]]})
@@ -69,6 +83,20 @@ def test_search_with_ids_returns_ids_and_documents():
 
     results = ingestor.search_with_ids("query")
     assert results == [("id_0", "doc1"), ("id_1", "doc2")]
+
+
+def test_search_with_ids_passes_query_texts_and_n_results():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(
+        return_value={"documents": [["doc1"]], "ids": [["id_0"]]}
+    )
+
+    results = ingestor.search_with_ids("query", n_results=4)
+
+    ingestor.collection.query.assert_called_once_with(
+        query_texts=["query"], n_results=4
+    )
+    assert results == [("id_0", "doc1")]
 
 
 def test_search_with_ids_empty_results():
