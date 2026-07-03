@@ -1,5 +1,10 @@
 import ollama
 from ingest import AtlasIngestor
+from langchain_adapters import (
+    ChromaRetrieverAdapter,
+    CrossEncoderRerankerAdapter,
+    OllamaLLMWrapper,
+)
 from rag_pipeline import LangChainRAG
 from reranker import AtlasReRanker
 
@@ -12,6 +17,8 @@ class AtlasRAG:
         model=None,
         llm_client=None,
         sample_docs=None,
+        n_results=10,
+        top_n=3,
     ):
         print("--- Initializing RAG System ---")
         self.ingestor = ingestor or AtlasIngestor()
@@ -34,38 +41,15 @@ class AtlasRAG:
         self.model = model or "llama3.2:1b"
         self.llm_client = llm_client or ollama
 
+        retriever = ChromaRetrieverAdapter(self.ingestor, n_results=n_results)
+        reranker = CrossEncoderRerankerAdapter(self.ranker, top_n=top_n)
+        llm = OllamaLLMWrapper(model_name=self.model, client=self.llm_client)
+        self.pipeline = LangChainRAG(retriever, reranker, llm)
+
     def ask(self, query):
         print(f"\n[QUERY]: {query}")
-
-        # --- Stage 1: Retrieval ---
-        candidates = self.ingestor.search(query, n_results=10)
-        if not candidates:
-            return {
-                "answer": "I couldn't find any relevant documents in the database.",
-                "source_documents": [],
-            }
-
-        # --- Stage 2: Re-ranking (PyTorch) ---
-        print(
-            f"[STAGE 2]: Re-ranking {len(candidates)} candidates using PyTorch Cross-Encoder..."
-        )
-        ranked_results = self.ranker.rerank(query, candidates, top_n=3)
-        context_docs = [res["document"] for res in ranked_results]
-
-        # --- Stage 3: Generation (Ollama) ---
-        print("[STAGE 3]: Generating final answer with Ollama...")
-        context_text = "\n\n".join(context_docs)
-
-        prompt = f"Context:\n{context_text}\n\nQuestion: {query}\n\nAnswer concisely based on the context:"
-
         try:
-            response = self.llm_client.chat(
-                model=self.model, messages=[{"role": "user", "content": prompt}]
-            )
-            return {
-                "answer": response["message"]["content"],
-                "source_documents": ranked_results,
-            }
+            return self.pipeline.ask(query)
         except Exception as e:
             return {
                 "answer": f"ERROR: Could not connect to Ollama ({str(e)})",
