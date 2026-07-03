@@ -95,6 +95,43 @@ def test_ask_reranks_candidates_and_returns_ollama_response(
     mock_ollama.chat.assert_called_once()
 
 
+def test_atlasrag_pipeline_integration_uses_real_adapters():
+    dummy_ingestor = MagicMock()
+    dummy_ingestor.collection.count.return_value = 1
+    dummy_ingestor.search_with_ids.return_value = [
+        ("id_1", "first document"),
+        ("id_2", "second document"),
+    ]
+
+    dummy_ranker = MagicMock()
+    dummy_ranker.rerank_with_ids.return_value = [
+        {"id": "id_2", "document": "second document", "score": 0.92},
+        {"id": "id_1", "document": "first document", "score": 0.81},
+    ]
+
+    client = MagicMock()
+    client.chat.return_value = {"message": {"content": "Integrated answer."}}
+
+    rag = AtlasRAG(
+        ingestor=dummy_ingestor,
+        ranker=dummy_ranker,
+        llm_client=client,
+        model="test-model",
+    )
+
+    result = rag.ask("integrated query")
+
+    assert result["answer"] == "Integrated answer."
+    assert result["source_documents"] == dummy_ranker.rerank_with_ids.return_value
+    dummy_ranker.rerank_with_ids.assert_called_once_with(
+        "integrated query",
+        [("id_1", "first document"), ("id_2", "second document")],
+        top_n=3,
+    )
+    client.chat.assert_called_once()
+    assert "Context:" in client.chat.call_args.kwargs["messages"][0]["content"]
+
+
 def test_ask_returns_error_message_when_ollama_fails(
     mock_ingestor, mock_ranker, mock_ollama
 ):
