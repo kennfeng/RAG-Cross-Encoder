@@ -1,4 +1,3 @@
-import ollama
 from ingest import AtlasIngestor
 from langchain_adapters import (
     ChromaRetrieverAdapter,
@@ -39,7 +38,7 @@ class AtlasRAG:
 
         self.ranker = ranker or AtlasReRanker()
         self.model = model or "llama3.2:1b"
-        self.llm_client = llm_client or ollama
+        self.llm_client = llm_client
 
         retriever = ChromaRetrieverAdapter(self.ingestor, n_results=n_results)
         reranker = CrossEncoderRerankerAdapter(self.ranker, top_n=top_n)

@@ -1,4 +1,5 @@
-import ollama
+from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage
 
 
 class ChromaRetrieverAdapter:
@@ -25,11 +26,8 @@ class CrossEncoderRerankerAdapter:
 class OllamaLLMWrapper:
     def __init__(self, model_name="llama3.2:1b", client=None):
         self.model_name = model_name
-        self.client = client or ollama
+        self.client = client or ChatOllama(model=self.model_name)
 
     def chat(self, prompt):
-        response = self.client.chat(
-            model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response["message"]["content"]
+        response = self.client.invoke([HumanMessage(content=prompt)])
+        return response.content

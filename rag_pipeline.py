@@ -1,5 +1,6 @@
 from ingest import AtlasIngestor
 from reranker import AtlasReRanker
+from langchain_core.prompts import PromptTemplate
 from langchain_adapters import (
     ChromaRetrieverAdapter,
     CrossEncoderRerankerAdapter,
@@ -12,6 +13,10 @@ class LangChainRAG:
         self.retriever = retriever
         self.reranker = reranker
         self.llm = llm
+        self.prompt = PromptTemplate(
+            input_variables=["context", "query"],
+            template="Context:\n{context}\n\nQuestion: {query}\n\nAnswer concisely based on the context:",
+        )
 
     @classmethod
     def from_defaults(
@@ -53,9 +58,12 @@ class LangChainRAG:
 
         ranked_results = self.reranker.rerank(query, candidates)
         context_docs = [res["document"] for res in ranked_results]
-        prompt = f"Context:\n{'\n\n'.join(context_docs)}\n\nQuestion: {query}\n\nAnswer concisely based on the context:"
+        context = "\n\n".join(context_docs)
 
-        answer = self.llm.chat(prompt)
+        # LCEL-style: format prompt via PromptTemplate, invoke via llm wrapper
+        formatted_prompt = self.prompt.format(context=context, query=query)
+        answer = self.llm.chat(formatted_prompt)
+
         return {
             "answer": answer,
             "source_documents": ranked_results,

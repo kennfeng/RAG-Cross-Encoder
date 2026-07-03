@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+from langchain_core.messages import HumanMessage
+
 from langchain_adapters import (
     ChromaRetrieverAdapter,
     CrossEncoderRerankerAdapter,
@@ -44,15 +46,18 @@ def test_cross_encoder_reranker_adapter_reranks_candidates():
     assert results == [{"id": "id_2", "document": "high", "score": 0.9}]
 
 
-def test_ollama_llm_wrapper_uses_client_chat_to_return_content():
+def test_ollama_llm_wrapper_uses_invoke_and_returns_content():
+    response = MagicMock()
+    response.content = "answer text"
+
     client = MagicMock()
-    client.chat.return_value = {"message": {"content": "answer text"}}
+    client.invoke.return_value = response
 
     wrapper = OllamaLLMWrapper(model_name="test-model", client=client)
     result = wrapper.chat("prompt")
 
-    client.chat.assert_called_once_with(
-        model="test-model",
-        messages=[{"role": "user", "content": "prompt"}],
-    )
+    client.invoke.assert_called_once()
+    msgs = client.invoke.call_args.args[0]
+    assert isinstance(msgs[0], HumanMessage)
+    assert msgs[0].content == "prompt"
     assert result == "answer text"

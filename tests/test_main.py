@@ -24,14 +24,15 @@ def mock_ranker(monkeypatch):
 
 
 @pytest.fixture
-def mock_ollama(monkeypatch):
-    ollama = MagicMock()
-    monkeypatch.setattr(main, "ollama", ollama)
-    return ollama
+def mock_llm_wrapper(monkeypatch):
+    llm_wrapper = MagicMock()
+    llm_wrapper.chat.return_value = "This is a concise answer."
+    monkeypatch.setattr(main, "OllamaLLMWrapper", lambda *args, **kwargs: llm_wrapper)
+    return llm_wrapper
 
 
 def test_ask_returns_message_when_no_candidates(
-    mock_ingestor, mock_ranker, mock_ollama
+    mock_ingestor, mock_ranker, mock_llm_wrapper
 ):
     mock_ingestor.search_with_ids.return_value = []
 
@@ -40,11 +41,11 @@ def test_ask_returns_message_when_no_candidates(
 
     assert result["answer"] == "I couldn't find any relevant documents in the database."
     assert result["source_documents"] == []
-    mock_ollama.chat.assert_not_called()
+    mock_llm_wrapper.chat.assert_not_called()
 
 
 def test_init_loads_sample_data_when_db_is_empty(
-    mock_ingestor, mock_ranker, mock_ollama
+    mock_ingestor, mock_ranker, mock_llm_wrapper
 ):
     mock_ingestor.collection.count.return_value = 0
 
@@ -55,7 +56,7 @@ def test_init_loads_sample_data_when_db_is_empty(
 
 
 def test_init_skips_sample_data_when_db_is_not_empty(
-    mock_ingestor, mock_ranker, mock_ollama
+    mock_ingestor, mock_ranker, mock_llm_wrapper
 ):
     mock_ingestor.collection.count.return_value = 1
 
@@ -66,7 +67,7 @@ def test_init_skips_sample_data_when_db_is_not_empty(
 
 
 def test_ask_reranks_candidates_and_returns_ollama_response(
-    mock_ingestor, mock_ranker, mock_ollama
+    mock_ingestor, mock_ranker, mock_llm_wrapper
 ):
     mock_ingestor.search_with_ids.return_value = [
         ("id_1", "low"),
@@ -78,9 +79,7 @@ def test_ask_reranks_candidates_and_returns_ollama_response(
         {"id": "id_3", "document": "mid", "score": 0.85},
         {"id": "id_1", "document": "low", "score": 0.75},
     ]
-    mock_ollama.chat.return_value = {
-        "message": {"content": "This is a concise answer."}
-    }
+    mock_llm_wrapper.chat.return_value = "This is a concise answer."
 
     rag = AtlasRAG()
     result = rag.ask("query")
@@ -92,10 +91,10 @@ def test_ask_reranks_candidates_and_returns_ollama_response(
         [("id_1", "low"), ("id_2", "high"), ("id_3", "mid")],
         top_n=3,
     )
-    mock_ollama.chat.assert_called_once()
+    mock_llm_wrapper.chat.assert_called_once()
 
 
-def test_atlasrag_pipeline_integration_uses_real_adapters():
+def test_atlasrag_pipeline_integration_uses_real_adapters(mock_llm_wrapper):
     dummy_ingestor = MagicMock()
     dummy_ingestor.collection.count.return_value = 1
     dummy_ingestor.search_with_ids.return_value = [
@@ -109,31 +108,30 @@ def test_atlasrag_pipeline_integration_uses_real_adapters():
         {"id": "id_1", "document": "first document", "score": 0.81},
     ]
 
-    client = MagicMock()
-    client.chat.return_value = {"message": {"content": "Integrated answer."}}
-
     rag = AtlasRAG(
         ingestor=dummy_ingestor,
         ranker=dummy_ranker,
-        llm_client=client,
+        llm_client=None,
         model="test-model",
     )
 
     result = rag.ask("integrated query")
 
-    assert result["answer"] == "Integrated answer."
+    assert result["answer"] == "This is a concise answer."
     assert result["source_documents"] == dummy_ranker.rerank_with_ids.return_value
     dummy_ranker.rerank_with_ids.assert_called_once_with(
         "integrated query",
         [("id_1", "first document"), ("id_2", "second document")],
         top_n=3,
     )
-    client.chat.assert_called_once()
-    assert "Context:" in client.chat.call_args.kwargs["messages"][0]["content"]
+    mock_llm_wrapper.chat.assert_called_once()
+    prompt_text = mock_llm_wrapper.chat.call_args.args[0]
+    assert prompt_text.startswith("Context:")
+    assert "integrated query" in prompt_text
 
 
 def test_ask_returns_error_message_when_ollama_fails(
-    mock_ingestor, mock_ranker, mock_ollama
+    mock_ingestor, mock_ranker, mock_llm_wrapper
 ):
     mock_ingestor.search_with_ids.return_value = [
         ("id_1", "doc1"),
@@ -142,11 +140,11 @@ def test_ask_returns_error_message_when_ollama_fails(
     mock_ranker.rerank_with_ids.return_value = [
         {"id": "id_1", "document": "doc1", "score": 0.8}
     ]
-    mock_ollama.chat.side_effect = Exception("Ollama unavailable")
+    mock_llm_wrapper.chat.side_effect = Exception("Ollama unavailable")
 
     rag = AtlasRAG()
     result = rag.ask("query")
 
     assert result["answer"].startswith("ERROR: Could not connect to Ollama")
     assert result["source_documents"] == []
-    mock_ollama.chat.assert_called_once()
+    mock_llm_wrapper.chat.assert_called_once()
