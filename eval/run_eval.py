@@ -5,11 +5,42 @@ from pathlib import Path
 import os
 import shutil
 import sys
+import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ingest import AtlasIngestor
 from reranker import AtlasReRanker
+
+
+def resolve_safe_path(path: str) -> Path:
+    candidate = Path(path).expanduser()
+    return candidate.resolve()
+
+
+def is_under_path(path: Path, base: Path) -> bool:
+    try:
+        return path.is_relative_to(base)
+    except AttributeError:
+        return base == path or base in path.parents
+
+
+def validate_dataset_path(file_path: str) -> Path:
+    dataset_path = resolve_safe_path(str(file_path))
+    if not dataset_path.exists() or not dataset_path.is_file():
+        raise FileNotFoundError(
+            f"Dataset path does not exist or is not a file: {dataset_path}"
+        )
+    return dataset_path
+
+
+def validate_db_path(db_path: str, base_dir: Path) -> Path:
+    resolved = resolve_safe_path(str(db_path))
+    if resolved.exists() and not resolved.is_dir():
+        raise ValueError(f"Database path exists and is not a directory: {resolved}")
+    if not is_under_path(resolved, base_dir):
+        raise ValueError(f"Database path must be under {base_dir}: {resolved}")
+    return resolved
 
 
 def load_dataset(file_path):
@@ -128,13 +159,27 @@ def main():
         action="store_true",
         help="Keep the ChromaDB database after evaluation",
     )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Confirm destructive removal of an existing evaluation database",
+    )
     args = parser.parse_args()
+
+    eval_base_dir = Path(__file__).parent.resolve()
+    args.dataset = validate_dataset_path(args.dataset)
+    args.db_path = validate_db_path(args.db_path, eval_base_dir)
 
     data = load_dataset(args.dataset)
     corpus = data["corpus"]
     queries = data["queries"]
 
-    if os.path.exists(args.db_path) and not args.keep_db:
+    if args.db_path.exists() and not args.keep_db:
+        if not args.yes:
+            raise ValueError(
+                f"Refusing to remove existing database at {args.db_path}."
+                " Pass --yes to confirm destructive action."
+            )
         print(f"Removing existing database at {args.db_path}...")
         shutil.rmtree(args.db_path)
 
