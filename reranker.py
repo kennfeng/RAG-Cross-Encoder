@@ -4,11 +4,16 @@ import numpy as np
 
 
 class AtlasReRanker:
-    def __init__(self, model_name="BAAI/bge-reranker-base"):
+    def __init__(self, model=None, model_name="BAAI/bge-reranker-base"):
         """
         Initializes a PyTorch-based Cross-Encoder.
         This model takes a Query, Document pair and outputs a relevancy score.
         """
+        if model is not None:
+            self.model = model
+            self.device = getattr(model, "device", "cpu")
+            return
+
         print(f"Loading PyTorch Re-ranker model: {model_name}...")
         # Check for GPU availability
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
