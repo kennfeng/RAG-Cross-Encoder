@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 import shutil
 import sys
-import tempfile
+import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -93,18 +93,25 @@ def run_retrieval_plus_rerank(ingestor, ranker, query, n_results, top_n):
 
 
 def summarize(name, per_query_results, k):
-    n = len(per_query_results)
-    avg_hit_rate = sum(result["hit_rate"] for result in per_query_results) / n
-    avg_precision = sum(result["precision"] for result in per_query_results) / n
-    avg_mrr = sum(result["mrr"] for result in per_query_results) / n
-    avg_latency = sum(result["latency_ms"] for result in per_query_results) / n
+    if not per_query_results:
+        return {
+            "name": name,
+            "avg_hit_rate": 0.0,
+            "avg_precision": 0.0,
+            "avg_mrr": 0.0,
+            "avg_latency_ms": 0.0,
+            "k": k,
+        }
+
+    df = pd.DataFrame(per_query_results)
+    avg_metrics = df.mean(numeric_only=True)
 
     return {
         "name": name,
-        "avg_hit_rate": avg_hit_rate,
-        "avg_precision": avg_precision,
-        "avg_mrr": avg_mrr,
-        "avg_latency_ms": avg_latency,
+        "avg_hit_rate": float(avg_metrics.get("hit_rate", 0.0)),
+        "avg_precision": float(avg_metrics.get("precision", 0.0)),
+        "avg_mrr": float(avg_metrics.get("mrr", 0.0)),
+        "avg_latency_ms": float(avg_metrics.get("latency_ms", 0.0)),
         "k": k,
     }
 
@@ -113,21 +120,8 @@ def print_table(rows):
     if not rows:
         return
 
-    headers = list(rows[0].keys())
-    widths = {
-        header: max(len(header), max(len(str(row[header])) for row in rows))
-        for header in headers
-    }
-
-    def fmt_row(values):
-        return " | ".join(
-            f"{str(value):<{widths[header]}}" for header, value in zip(headers, values)
-        )
-
-    print(fmt_row(headers))
-    print("-+-".join("-" * widths[header] for header in headers))
-    for row in rows:
-        print(fmt_row([row[header] for header in headers]))
+    df = pd.DataFrame(rows)
+    print(df.to_string(index=False))
 
 
 def main():

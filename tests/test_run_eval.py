@@ -95,3 +95,13 @@ def test_print_table_outputs_rows(capsys):
     assert "score" in captured.out
     assert "a" in captured.out
     assert "2" in captured.out
+
+
+def test_summarize_handles_empty_results():
+    summary = run_eval.summarize("empty_test", [], k=5)
+    assert summary["name"] == "empty_test"
+    assert summary["avg_hit_rate"] == 0.0
+    assert summary["avg_precision"] == 0.0
+    assert summary["avg_mrr"] == 0.0
+    assert summary["avg_latency_ms"] == 0.0
+    assert summary["k"] == 5
