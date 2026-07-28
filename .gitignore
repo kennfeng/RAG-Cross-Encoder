@@ -13,3 +13,4 @@ __pycache__/
 
 # Agents
 AGENTS.md
+.idea/workspace.xml

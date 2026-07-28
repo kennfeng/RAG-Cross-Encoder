@@ -1,7 +1,18 @@
+import json
 import pytest
+from pathlib import Path
 from unittest.mock import MagicMock
 
+import pandas as pd
+
 from eval import run_eval
+from eval.analyzer import EvalReporter
+
+
+RESULTS_JSON = Path(__file__).resolve().parent.parent / "eval" / "results.json"
+
+
+# --- Existing unit tests ---
 
 
 def test_precision_at_k_handles_zero_k():
@@ -105,3 +116,81 @@ def test_summarize_handles_empty_results():
     assert summary["avg_mrr"] == 0.0
     assert summary["avg_latency_ms"] == 0.0
     assert summary["k"] == 5
+
+
+# --- E2E tests with real results.json ---
+
+
+class TestE2ERealResults:
+    """E2E tests that load the actual eval/results.json and exercise
+    EvalReporter end-to-end without any model loading."""
+
+    @pytest.fixture(autouse=True)
+    def _load_real_results(self):
+        if not RESULTS_JSON.exists():
+            pytest.skip("results.json not found")
+        self.reporter = EvalReporter.from_file(RESULTS_JSON)
+
+    def test_loads_correct_config(self):
+        assert self.reporter.config["k"] == 3
+        assert self.reporter.config["retrieve_n"] == 25
+        assert self.reporter.config["num_queries"] == 15
+
+    def test_per_query_df_has_30_rows(self):
+        df = self.reporter.per_query_df
+        assert len(df) == 30
+
+    def test_per_query_df_has_both_strategies(self):
+        df = self.reporter.per_query_df
+        assert set(df["strategy"].unique()) == {
+            "retrieval_only",
+            "retrieval_plus_rerank",
+        }
+
+    def test_summary_df_has_two_rows(self):
+        df = self.reporter.summary_df
+        assert len(df) == 2
+
+    def test_summary_df_mrr_improvement(self):
+        df = self.reporter.summary_df
+        mrr_only = df[df["name"] == "Retrieval Only"]["mean_mrr"].iloc[0]
+        mrr_rerank = df[df["name"] == "Retrieval + Re-rank"]["mean_mrr"].iloc[0]
+        assert mrr_rerank > mrr_only
+
+    def test_latency_percentiles_retrieval_only(self):
+        df = self.reporter.latency_percentiles("retrieval_only")
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) == 5
+        p50 = df[df["quantile"] == 0.5]["latency_ms"].iloc[0]
+        p90 = df[df["quantile"] == 0.9]["latency_ms"].iloc[0]
+        assert p50 < p90
+
+    def test_latency_percentiles_rerank(self):
+        df = self.reporter.latency_percentiles("retrieval_plus_rerank")
+        p50 = df[df["quantile"] == 0.5]["latency_ms"].iloc[0]
+        assert p50 > 1000
+
+    def test_worst_queries_returns_sorted(self):
+        df = self.reporter.worst_queries("retrieval_only", metric="mrr", n=5)
+        assert len(df) == 5
+        assert df["mrr"].is_monotonic_increasing
+
+    def test_difficulty_breakdown_counts(self):
+        df = self.reporter.difficulty_breakdown("retrieval_only")
+        assert df["count"].sum() == 15
+
+    def test_compare_same_reporter(self):
+        df = self.reporter.compare(self.reporter)
+        assert len(df) == 2
+
+    def test_export_csv_summary(self, tmp_path):
+        self.reporter.export_csv(tmp_path / "summary.csv", which="summary")
+        assert (tmp_path / "summary.csv").exists()
+        loaded = pd.read_csv(tmp_path / "summary.csv")
+        assert len(loaded) == 2
+
+    def test_export_csv_per_query(self, tmp_path):
+        self.reporter.export_csv(tmp_path / "pq.csv", which="per_query")
+        assert (tmp_path / "pq.csv").exists()
+        loaded = pd.read_csv(tmp_path / "pq.csv")
+        assert len(loaded) == 30

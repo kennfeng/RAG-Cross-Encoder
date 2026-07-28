@@ -5,12 +5,14 @@ from pathlib import Path
 import os
 import shutil
 import sys
+
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ingest import AtlasIngestor
 from reranker import AtlasReRanker
+from eval.analyzer import EvalReporter
 
 
 def resolve_safe_path(path: str) -> Path:
@@ -149,6 +151,16 @@ def main():
         "--output", default=None, help="Path to save evaluation results as JSON"
     )
     parser.add_argument(
+        "--export-csv",
+        default=None,
+        help="Directory to export summary and per_query CSVs via EvalReporter",
+    )
+    parser.add_argument(
+        "--compare",
+        default=None,
+        help="Path to another results JSON to compare against (uses EvalReporter)",
+    )
+    parser.add_argument(
         "--keep-db",
         action="store_true",
         help="Keep the ChromaDB database after evaluation",
@@ -240,22 +252,41 @@ def main():
     print("=" * 60)
     print_table([summary_only, summary_rerank])
 
+    full_results = {
+        "config": {
+            "k": args.k,
+            "retrieve_n": args.retrieve_n,
+            "num_queries": len(queries),
+        },
+        "summary": [summary_only, summary_rerank],
+        "per_query": {
+            "retrieval_only": retrieval_results,
+            "retrieval_plus_rerank": rerank_results,
+        },
+    }
+
+    reporter = EvalReporter.from_dict(full_results)
+
     if args.output:
-        full_results = {
-            "config": {
-                "k": args.k,
-                "retrieve_n": args.retrieve_n,
-                "num_queries": len(queries),
-            },
-            "summary": [summary_only, summary_rerank],
-            "per_query": {
-                "retrieval_only": retrieval_results,
-                "retrieval_plus_rerank": rerank_results,
-            },
-        }
         with open(args.output, "w", encoding="utf-8") as f:
             json.dump(full_results, f, indent=2)
         print(f"\nFull results written to {args.output}")
+
+    if args.export_csv:
+        export_dir = Path(args.export_csv)
+        reporter.export_csv(export_dir, which="all")
+        print(f"CSVs exported to {export_dir.parent}")
+
+    if args.compare:
+        compare_path = Path(args.compare)
+        if not compare_path.exists():
+            raise FileNotFoundError(f"Comparison file not found: {compare_path}")
+        other_reporter = EvalReporter.from_file(compare_path)
+        comparison = reporter.compare(other_reporter)
+        print("\n" + "=" * 60)
+        print(f"Comparison with k={other_reporter.config.get('k')}")
+        print("=" * 60)
+        print(comparison.to_string(index=False))
 
     if not args.keep_db and os.path.exists(args.db_path):
         # Release ChromaDB's file handles before attempting to delete
