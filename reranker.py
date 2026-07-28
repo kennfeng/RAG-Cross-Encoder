@@ -1,6 +1,5 @@
 import torch
 from sentence_transformers import CrossEncoder
-import numpy as np
 
 
 class AtlasReRanker:
@@ -26,6 +25,11 @@ class AtlasReRanker:
             ) from exc
         print(f"Model loaded on {self.device}")
 
+    def _score_pairs(self, pairs):
+        scores = self.model.predict(pairs)
+        ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+        return scores, ranked_indices
+
     def rerank(self, query, documents, top_n=3):
         """
         Re-ranks a list of documents based on their relevance to the query.
@@ -33,21 +37,13 @@ class AtlasReRanker:
         if not documents:
             return []
 
-        # Prepare pairs for the Cross-Encoder
         pairs = [[query, doc] for doc in documents]
+        scores, ranked_indices = self._score_pairs(pairs)
 
-        # Predict relevancy scores
-        scores = self.model.predict(pairs)
-
-        # Sort documents by scores in descending order
-        ranked_indices = np.argsort(scores)[::-1]
-
-        results = [
+        return [
             {"document": documents[i], "score": float(scores[i])}
             for i in ranked_indices[:top_n]
         ]
-
-        return results
 
     def rerank_with_ids(self, query, candidates, top_n=3):
         """
@@ -57,10 +53,9 @@ class AtlasReRanker:
             return []
 
         pairs = [[query, doc] for _, doc in candidates]
-        scores = self.model.predict(pairs)
-        ranked_indices = np.argsort(scores)[::-1]
+        scores, ranked_indices = self._score_pairs(pairs)
 
-        results = [
+        return [
             {
                 "id": candidates[i][0],
                 "document": candidates[i][1],
@@ -68,7 +63,6 @@ class AtlasReRanker:
             }
             for i in ranked_indices[:top_n]
         ]
-        return results
 
 
 if __name__ == "__main__":
