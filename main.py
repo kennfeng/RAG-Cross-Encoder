@@ -2,7 +2,7 @@ from ingest import AtlasIngestor
 from langchain_adapters import (
     ChromaRetrieverAdapter,
     CrossEncoderRerankerAdapter,
-    OllamaLLMWrapper,
+    create_llm,
 )
 from rag_pipeline import LangChainRAG
 from reranker import AtlasReRanker
@@ -14,7 +14,7 @@ class AtlasRAG:
         ingestor=None,
         ranker=None,
         model=None,
-        llm_client=None,
+        provider="ollama",
         sample_docs=None,
         n_results=10,
         top_n=3,
@@ -38,11 +38,11 @@ class AtlasRAG:
 
         self.ranker = ranker or AtlasReRanker()
         self.model = model or "llama3.2:1b"
-        self.llm_client = llm_client
+        self.provider = provider
 
         retriever = ChromaRetrieverAdapter(self.ingestor, n_results=n_results)
         reranker = CrossEncoderRerankerAdapter(self.ranker, top_n=top_n)
-        llm = OllamaLLMWrapper(model_name=self.model, client=self.llm_client)
+        llm = create_llm(provider=self.provider, model_name=self.model)
         self.pipeline = LangChainRAG(retriever, reranker, llm)
 
     def ask(self, query):

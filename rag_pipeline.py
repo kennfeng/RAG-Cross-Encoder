@@ -1,11 +1,13 @@
-from ingest import AtlasIngestor
-from reranker import AtlasReRanker
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda
+
+from ingest import AtlasIngestor
 from langchain_adapters import (
     ChromaRetrieverAdapter,
     CrossEncoderRerankerAdapter,
-    OllamaLLMWrapper,
+    create_llm,
 )
+from reranker import AtlasReRanker
 
 
 class LangChainRAG:
@@ -24,6 +26,7 @@ class LangChainRAG:
         db_path="./atlas_db",
         model_name="BAAI/bge-reranker-base",
         llm_model_name="llama3.2:1b",
+        provider="ollama",
         n_results=10,
         top_n=3,
         sample_docs=None,
@@ -44,7 +47,7 @@ class LangChainRAG:
         ranker = AtlasReRanker(model_name=model_name)
         retriever = ChromaRetrieverAdapter(ingestor, n_results=n_results)
         reranker = CrossEncoderRerankerAdapter(ranker, top_n=top_n)
-        llm = OllamaLLMWrapper(model_name=llm_model_name)
+        llm = create_llm(provider=provider, model_name=llm_model_name)
 
         return cls(retriever, reranker, llm)
 
@@ -60,11 +63,10 @@ class LangChainRAG:
         context_docs = [res["document"] for res in ranked_results]
         context = "\n\n".join(context_docs)
 
-        # LCEL-style: format prompt via PromptTemplate, invoke via llm wrapper
         formatted_prompt = self.prompt.format(context=context, query=query)
-        answer = self.llm.chat(formatted_prompt)
+        answer = self.llm.invoke([{"role": "user", "content": formatted_prompt}])
 
         return {
-            "answer": answer,
+            "answer": answer.content,
             "source_documents": ranked_results,
         }

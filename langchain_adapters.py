@@ -1,5 +1,22 @@
-from langchain_ollama import ChatOllama
+import sys
+
 from langchain_core.messages import HumanMessage
+
+
+def create_llm(provider="ollama", model_name="llama3.2:1b", **kwargs):
+    """Factory that returns a LangChain BaseChatModel for the given provider.
+
+    Supported providers:
+        - "ollama"  (langchain_ollama.ChatOllama)
+    """
+    if provider == "ollama":
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(model=model_name, **kwargs)
+
+    raise ValueError(
+        f"Unknown provider: {provider!r}. Supported: 'ollama'."
+    )
 
 
 class ChromaRetrieverAdapter:
@@ -21,24 +38,3 @@ class CrossEncoderRerankerAdapter:
 
     def rerank(self, query, candidates):
         return self.ranker.rerank_with_ids(query, candidates, top_n=self.top_n)
-
-
-class OllamaLLMWrapper:
-    def __init__(self, model_name="llama3.2:1b", client=None):
-        self.model_name = model_name
-        try:
-            self.client = client or ChatOllama(model=self.model_name)
-        except Exception as exc:
-            raise RuntimeError(
-                f"Failed to initialize Ollama client for model '{self.model_name}'. "
-                "Ensure Ollama is running and the model name is valid."
-            ) from exc
-
-    def chat(self, prompt):
-        try:
-            response = self.client.invoke([HumanMessage(content=prompt)])
-        except Exception as exc:
-            raise RuntimeError(
-                "Ollama invocation failed. Ensure Ollama is reachable and the prompt is valid."
-            ) from exc
-        return response.content

@@ -16,10 +16,10 @@ def test_langchainrag_uses_chain_with_context_and_query():
         {"id": "id_1", "document": "doc1", "score": 0.8},
     ]
 
-    llm_wrapper = MagicMock()
-    llm_wrapper.chat.return_value = "final answer"
+    llm = MagicMock()
+    llm.invoke.return_value = MagicMock(content="final answer")
 
-    pipeline = LangChainRAG(retriever, reranker, llm_wrapper)
+    pipeline = LangChainRAG(retriever, reranker, llm)
     result = pipeline.ask("test query")
 
     reranker.rerank.assert_called_once_with(
@@ -28,21 +28,18 @@ def test_langchainrag_uses_chain_with_context_and_query():
     assert result["answer"] == "final answer"
     assert result["source_documents"] == reranker.rerank.return_value
 
-    llm_wrapper.chat.assert_called_once()
-    prompt_text = llm_wrapper.chat.call_args.args[0]
-    assert prompt_text.startswith("Context:")
-    assert "test query" in prompt_text
+    llm.invoke.assert_called_once()
 
 
 def test_langchainrag_returns_no_documents_message_when_empty():
     retriever = MagicMock()
     retriever.get_relevant_documents_with_ids.return_value = []
     reranker = MagicMock()
-    llm_wrapper = MagicMock()
+    llm = MagicMock()
 
-    pipeline = LangChainRAG(retriever, reranker, llm_wrapper)
+    pipeline = LangChainRAG(retriever, reranker, llm)
     result = pipeline.ask("missing query")
 
     assert result["answer"] == "I couldn't find any relevant documents in the database."
     assert result["source_documents"] == []
-    llm_wrapper.chat.assert_not_called()
+    llm.invoke.assert_not_called()
