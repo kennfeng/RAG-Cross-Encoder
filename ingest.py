@@ -13,7 +13,9 @@ class AtlasIngestor:
             model_name="all-MiniLM-L6-v2"
         )
         self.collection = self.client.get_or_create_collection(
-            name="documents", embedding_function=self.emb_fn
+            name="documents",
+            embedding_function=self.emb_fn,
+            metadata={"hnsw:space": "cosine"},
         )
 
     def add_documents(self, text_list, metadata_list=None, ids=None):
