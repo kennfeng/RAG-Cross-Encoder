@@ -1,3 +1,4 @@
+import sys
 import pytest
 from unittest.mock import MagicMock, patch
 from langchain_core.messages import HumanMessage
@@ -62,22 +63,22 @@ class TestCreateLLM:
             mock_cls.assert_called_once_with(model="llama3.2:1b")
 
     def test_create_llm_openai_import_error(self):
-        with pytest.raises(ImportError, match="langchain-openai"):
-            create_llm(provider="openai", model_name="gpt-4o")
-
-    def test_create_llm_unknown_provider_raises(self):
-        with pytest.raises(ValueError, match="Unknown provider"):
-            create_llm(provider="nonexistent", model_name="model")
+        with patch.dict(sys.modules, {"langchain_openai": None}):
+            with pytest.raises(ImportError, match="langchain-openai"):
+                create_llm(provider="openai", model_name="gpt-4o")
 
     def test_create_llm_openai_when_installed(self):
         mock_openai_cls = MagicMock()
         mock_module = MagicMock()
         mock_module.ChatOpenAI = mock_openai_cls
         with patch.dict("sys.modules", {"langchain_openai": mock_module}):
-            with patch("langchain_ollama.ChatOllama"):
-                llm = create_llm(provider="openai", model_name="gpt-4o")
-                mock_openai_cls.assert_called_once_with(model="gpt-4o")
-                assert llm is not None
+            llm = create_llm(provider="openai", model_name="gpt-4o")
+            mock_openai_cls.assert_called_once_with(model="gpt-4o")
+            assert llm is not None
+
+    def test_create_llm_unknown_provider_raises(self):
+        with pytest.raises(ValueError, match="Unknown provider"):
+            create_llm(provider="nonexistent", model_name="model")
 
     def test_create_llm_passes_extra_kwargs(self):
         with patch("langchain_ollama.ChatOllama") as mock_cls:

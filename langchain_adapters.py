@@ -8,14 +8,25 @@ def create_llm(provider="ollama", model_name="llama3.2:1b", **kwargs):
 
     Supported providers:
         - "ollama"  (langchain_ollama.ChatOllama)
+        - "openai"  (langchain_openai.ChatOpenAI) — requires: pip install langchain-openai
     """
     if provider == "ollama":
         from langchain_ollama import ChatOllama
 
         return ChatOllama(model=model_name, **kwargs)
 
+    if provider == "openai":
+        try:
+            from langchain_openai import ChatOpenAI
+        except ImportError:
+            raise ImportError(
+                "langchain-openai is required for the 'openai' provider. "
+                "Install it with: pip install langchain-openai"
+            )
+        return ChatOpenAI(model=model_name, **kwargs)
+
     raise ValueError(
-        f"Unknown provider: {provider!r}. Supported: 'ollama'."
+        f"Unknown provider: {provider!r}. Supported: 'ollama', 'openai'."
     )
 
 
