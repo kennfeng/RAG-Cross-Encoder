@@ -3,19 +3,16 @@ from sentence_transformers import CrossEncoder
 
 
 class AtlasReRanker:
-    def __init__(self, model=None, model_name="BAAI/bge-reranker-base"):
-        """
-        Initializes a PyTorch-based Cross-Encoder.
-        This model takes a Query, Document pair and outputs a relevancy score.
-        """
+    def __init__(self, model=None, model_name="BAAI/bge-reranker-base", batch_size=32):
         if model is not None:
             self.model = model
             self.device = getattr(model, "device", "cpu")
+            self.batch_size = getattr(model, "batch_size", batch_size)
             return
 
         print(f"Loading PyTorch Re-ranker model: {model_name}...")
-        # Check for GPU availability
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.batch_size = batch_size
         try:
             self.model = CrossEncoder(model_name, device=self.device)
         except Exception as exc:
@@ -26,14 +23,11 @@ class AtlasReRanker:
         print(f"Model loaded on {self.device}")
 
     def _score_pairs(self, pairs):
-        scores = self.model.predict(pairs)
+        scores = self.model.predict(pairs, batch_size=self.batch_size)
         ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
         return scores, ranked_indices
 
     def rerank(self, query, documents, top_n=3):
-        """
-        Re-ranks a list of documents based on their relevance to the query.
-        """
         if not documents:
             return []
 
@@ -46,9 +40,6 @@ class AtlasReRanker:
         ]
 
     def rerank_with_ids(self, query, candidates, top_n=3):
-        """
-        Same as rerank() but with (id, document tuples)
-        """
         if not candidates:
             return []
 
@@ -66,7 +57,6 @@ class AtlasReRanker:
 
 
 if __name__ == "__main__":
-    # Test block
     ranker = AtlasReRanker()
     test_query = "How do I build a RAG system?"
     test_docs = [
