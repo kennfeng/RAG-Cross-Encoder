@@ -1,15 +1,13 @@
-import sys
+from typing import Any
 
-from langchain_core.messages import HumanMessage
+from langchain_core.language_models import BaseChatModel
 
 
-def create_llm(provider="ollama", model_name="llama3.2:1b", **kwargs):
-    """Factory that returns a LangChain BaseChatModel for the given provider.
-
-    Supported providers:
-        - "ollama"  (langchain_ollama.ChatOllama)
-        - "openai"  (langchain_openai.ChatOpenAI) — requires: pip install langchain-openai
-    """
+def create_llm(
+    provider: str = "ollama",
+    model_name: str = "llama3.2:1b",
+    **kwargs: Any,
+) -> BaseChatModel:
     if provider == "ollama":
         from langchain_ollama import ChatOllama
 
@@ -31,21 +29,21 @@ def create_llm(provider="ollama", model_name="llama3.2:1b", **kwargs):
 
 
 class ChromaRetrieverAdapter:
-    def __init__(self, ingestor, n_results=10):
+    def __init__(self, ingestor: Any, n_results: int = 10) -> None:
         self.ingestor = ingestor
         self.n_results = n_results
 
-    def get_relevant_documents(self, query):
+    def get_relevant_documents(self, query: str) -> list[str]:
         return self.ingestor.search(query, n_results=self.n_results)
 
-    def get_relevant_documents_with_ids(self, query):
+    def get_relevant_documents_with_ids(self, query: str) -> list[tuple[str, str]]:
         return self.ingestor.search_with_ids(query, n_results=self.n_results)
 
 
 class CrossEncoderRerankerAdapter:
-    def __init__(self, ranker, top_n=3):
+    def __init__(self, ranker: Any, top_n: int = 3) -> None:
         self.ranker = ranker
         self.top_n = top_n
 
-    def rerank(self, query, candidates):
+    def rerank(self, query: str, candidates: list[tuple[str, str]]) -> list[dict]:
         return self.ranker.rerank_with_ids(query, candidates, top_n=self.top_n)
