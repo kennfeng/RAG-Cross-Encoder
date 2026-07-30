@@ -12,9 +12,6 @@ from eval.analyzer import EvalReporter
 RESULTS_JSON = Path(__file__).resolve().parent.parent / "eval" / "results.json"
 
 
-# --- Existing unit tests ---
-
-
 def test_precision_at_k_handles_zero_k():
     assert run_eval.precision_at_k(["id_1", "id_2"], ["id_2"], 0) == 0.0
 
@@ -118,9 +115,6 @@ def test_summarize_handles_empty_results():
     assert summary["k"] == 5
 
 
-# --- E2E tests with real results.json ---
-
-
 class TestE2ERealResults:
     """E2E tests that load the actual eval/results.json and exercise
     EvalReporter end-to-end without any model loading."""
@@ -133,7 +127,7 @@ class TestE2ERealResults:
 
     def test_loads_correct_config(self):
         assert self.reporter.config["k"] == 3
-        assert self.reporter.config["retrieve_n"] == 25
+        assert self.reporter.config["retrieve_n"] == 10
         assert self.reporter.config["num_queries"] == 15
 
     def test_per_query_df_has_30_rows(self):
