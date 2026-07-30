@@ -32,7 +32,7 @@ class AtlasRAG:
         print(f"\n[QUERY]: {query}")
         try:
             return self.pipeline.ask(query)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return {
                 "answer": f"ERROR: Could not connect to Ollama ({e!s})",
                 "source_documents": [],
