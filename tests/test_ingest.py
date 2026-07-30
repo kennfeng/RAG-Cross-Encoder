@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
-from ingest import AtlasIngestor
+
+from ingest import _chunk_text, AtlasIngestor
 
 
 def make_mock_ingestor():
@@ -62,7 +63,7 @@ def test_search_passes_query_texts_and_n_results():
     results = ingestor.search("query", n_results=5)
 
     ingestor.collection.query.assert_called_once_with(
-        query_texts=["query"], n_results=5
+        query_texts=["query"], n_results=5, where=None
     )
     assert results == ["doc1"]
 
@@ -94,7 +95,7 @@ def test_search_with_ids_passes_query_texts_and_n_results():
     results = ingestor.search_with_ids("query", n_results=4)
 
     ingestor.collection.query.assert_called_once_with(
-        query_texts=["query"], n_results=4
+        query_texts=["query"], n_results=4, where=None
     )
     assert results == [("id_0", "doc1")]
 
@@ -105,3 +106,92 @@ def test_search_with_ids_empty_results():
 
     results = ingestor.search_with_ids("query")
     assert results == []
+
+
+def test_search_passes_where_filter():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(
+        return_value={"documents": [["doc1"]], "ids": [["id_0"]]}
+    )
+
+    ingestor.search("query", where={"source": "wiki"})
+    ingestor.collection.query.assert_called_once_with(
+        query_texts=["query"], n_results=10, where={"source": "wiki"}
+    )
+
+
+def test_search_with_ids_passes_where_filter():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.query = MagicMock(
+        return_value={"documents": [["doc1"]], "ids": [["id_0"]]}
+    )
+
+    ingestor.search_with_ids("query", where={"source": "wiki"})
+    ingestor.collection.query.assert_called_once_with(
+        query_texts=["query"], n_results=10, where={"source": "wiki"}
+    )
+
+
+def test_add_documents_with_chunking():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.add = MagicMock()
+
+    long_text = "word " * 100
+    ingestor.add_documents([long_text], chunk_size=20, chunk_overlap=5)
+
+    add_kwargs = ingestor.collection.add.call_args
+    documents = add_kwargs[1]["documents"]
+    assert len(documents) > 1
+    assert all(isinstance(d, str) for d in documents)
+
+
+def test_add_documents_with_chunking_none():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.add = MagicMock()
+
+    ingestor.add_documents(["short text"], chunk_size=None)
+    ingestor.collection.add.assert_called_once_with(
+        documents=["short text"],
+        metadatas=None,
+        ids=["id_0"],
+    )
+
+
+def test_add_documents_with_chunking_and_metadata():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.add = MagicMock()
+
+    long_text = "word " * 100
+    metadata = [{"source": "test"}]
+    ingestor.add_documents([long_text], metadata_list=metadata, chunk_size=30, chunk_overlap=5)
+
+    add_kwargs = ingestor.collection.add.call_args
+    metadatas = add_kwargs[1]["metadatas"]
+    assert metadatas is not None
+    assert len(metadatas) > 1
+    assert metadatas[0]["source"] == "test"
+    assert "_chunk_index" in metadatas[0]
+    assert "_parent_id" in metadatas[0]
+
+
+def test_accepts_custom_embedding_model():
+    ingestor = AtlasIngestor(db_path="test_db", embedding_model_name="all-mpnet-base-v2")
+    assert ingestor.emb_fn is not None
+    assert ingestor.collection is not None
+
+
+def test_chunk_text_splits_into_multiple_chunks():
+    text = "word " * 100
+    chunks = _chunk_text(text, chunk_size=10, chunk_overlap=2)
+    assert len(chunks) > 1
+    assert all(isinstance(c, str) for c in chunks)
+
+
+def test_chunk_text_returns_single_for_short_text():
+    chunks = _chunk_text("short text", chunk_size=512, chunk_overlap=64)
+    assert chunks == ["short text"]
+
+
+def test_chunk_text_returns_single_for_zero_chunk_size():
+    chunks = _chunk_text("some text", chunk_size=0, chunk_overlap=0)
+    assert chunks == ["some text"]
