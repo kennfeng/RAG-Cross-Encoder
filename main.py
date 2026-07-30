@@ -1,51 +1,34 @@
-from ingest import AtlasIngestor
-from langchain_adapters import (
-    ChromaRetrieverAdapter,
-    CrossEncoderRerankerAdapter,
-    create_llm,
-)
+from typing import Any
+
+from langchain_adapters import create_llm
 from rag_pipeline import LangChainRAG
-from reranker import AtlasReRanker
 
 
 class AtlasRAG:
     def __init__(
         self,
-        ingestor=None,
-        ranker=None,
-        model=None,
-        provider="ollama",
-        sample_docs=None,
-        n_results=10,
-        top_n=3,
-    ):
+        pipeline: LangChainRAG | None = None,
+        model: str = "llama3.2:1b",
+        provider: str = "ollama",
+        sample_docs: list[str] | None = None,
+        n_results: int = 10,
+        top_n: int = 3,
+        temperature: float = 0.0,
+        max_tokens: int | None = None,
+    ) -> None:
         print("--- Initializing RAG System ---")
-        self.ingestor = ingestor or AtlasIngestor()
+        self.pipeline = pipeline or LangChainRAG.from_defaults(
+            llm_model_name=model,
+            provider=provider,
+            sample_docs=sample_docs,
+            n_results=n_results,
+            top_n=top_n,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        self.llm = create_llm(provider=provider, model_name=model)
 
-        # Check if DB is empty and add sample data if it is
-        if self.ingestor.collection.count() == 0:
-            print("[INFO]: DB is empty. Loading sample ML knowledge base...")
-            sample_kb = sample_docs or [
-                "PyTorch is an open source machine learning framework based on the Torch library.",
-                "TensorFlow is a free and open-source software library for machine learning and artificial intelligence.",
-                "RAG stands for Retrieval-Augmented Generation, a technique to provide external data to LLMs.",
-                "A Cross-Encoder is a type of deep learning model that processes pairs of inputs simultaneously to determine relevance.",
-                "Vector databases like ChromaDB store high-dimensional embeddings for fast similarity search.",
-                "Ollama allows you to run large language models locally on your machine.",
-                "Two-stage RAG uses a fast retriever (Stage 1) and a precise re-ranker (Stage 2) for better accuracy.",
-            ]
-            self.ingestor.add_documents(sample_kb)
-
-        self.ranker = ranker or AtlasReRanker()
-        self.model = model or "llama3.2:1b"
-        self.provider = provider
-
-        retriever = ChromaRetrieverAdapter(self.ingestor, n_results=n_results)
-        reranker = CrossEncoderRerankerAdapter(self.ranker, top_n=top_n)
-        llm = create_llm(provider=self.provider, model_name=self.model)
-        self.pipeline = LangChainRAG(retriever, reranker, llm)
-
-    def ask(self, query):
+    def ask(self, query: str) -> dict[str, Any]:
         print(f"\n[QUERY]: {query}")
         try:
             return self.pipeline.ask(query)
@@ -57,7 +40,7 @@ class AtlasRAG:
 
 
 if __name__ == "__main__":
-    rag = LangChainRAG.from_defaults()
+    rag = AtlasRAG()
     while True:
         try:
             user_input = input("\nAsk Atlas (or type 'exit'): ")
