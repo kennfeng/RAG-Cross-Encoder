@@ -1,16 +1,11 @@
 import json
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 
 class EvalReporter:
-    """Pandas-backed evaluation reporter for RAG retrieval analysis.
-
-    Uses DataFrames as the core data structure for per-query analysis,
-    latency percentiles, difficulty breakdowns, and multi-run comparison.
-    """
+    """Pandas-backed evaluation reporter for RAG retrieval analysis."""
 
     def __init__(self, results: dict):
         self._results = results
@@ -90,8 +85,7 @@ class EvalReporter:
         if subset.empty:
             raise ValueError(f"Unknown strategy: {strategy}")
 
-        values = subset["latency_ms"].values
-        result = np.quantile(values, quantiles)
+        result = subset["latency_ms"].quantile(quantiles)
         return pd.DataFrame(
             {"quantile": quantiles, "latency_ms": [float(v) for v in result]}
         )
