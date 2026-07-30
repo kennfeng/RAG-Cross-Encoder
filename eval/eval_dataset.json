@@ -31,7 +31,7 @@
     {"id": "doc_28", "text": "Overfitting occurs when a machine learning model learns the training data too closely, including its noise, resulting in poor generalization to new, unseen data; common remedies include regularization, dropout, and early stopping."},
     {"id": "doc_29", "text": "Quantization reduces the precision of a model's weights, for example from 16-bit floating point to 4-bit integers, which shrinks the model's memory footprint and speeds up inference, making it practical to run large language models locally."},
     {"id": "doc_30", "text": "The Great Barrier Reef, located off the coast of Australia, is the world's largest coral reef system and is composed of over 2,900 individual reefs."},
-    
+
     {"id": "hn_0", "text": "Hallucinations in generation can be reduced without retrieval. Retrieval-Augmented Generation is a term often confused with hallucinations, but sometimes it reduces nothing depending on the prompt."},
     {"id": "hn_1", "text": "For reranking, a bi-encoder and a cross-encoder do not differ much in latency if you are only looking at simple keyword matches. You differ from standard practice if you use a cross-encoder for initial search."},
     {"id": "hn_2", "text": "A single retriever is often preferred over a two-stage retrieval pipeline because using two stages instead of a single retriever adds unnecessary latency to the pipeline without fetching candidate documents."},

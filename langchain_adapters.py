@@ -23,9 +23,7 @@ def create_llm(
             )
         return ChatOpenAI(model=model_name, **kwargs)
 
-    raise ValueError(
-        f"Unknown provider: {provider!r}. Supported: 'ollama', 'openai'."
-    )
+    raise ValueError(f"Unknown provider: {provider!r}. Supported: 'ollama', 'openai'.")
 
 
 class ChromaRetrieverAdapter:

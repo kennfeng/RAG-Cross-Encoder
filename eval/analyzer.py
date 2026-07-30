@@ -51,7 +51,14 @@ class EvalReporter:
             frames.append(df)
         if not frames:
             return pd.DataFrame(
-                columns=["query", "strategy", "precision", "hit_rate", "mrr", "latency_ms"]
+                columns=[
+                    "query",
+                    "strategy",
+                    "precision",
+                    "hit_rate",
+                    "mrr",
+                    "latency_ms",
+                ]
             )
         return pd.concat(frames, ignore_index=True)
 
@@ -74,9 +81,7 @@ class EvalReporter:
             )
         return pd.DataFrame(records)
 
-    def latency_percentiles(
-        self, strategy: str, quantiles=None
-    ) -> pd.DataFrame:
+    def latency_percentiles(self, strategy: str, quantiles=None) -> pd.DataFrame:
         if quantiles is None:
             quantiles = [0.0, 0.25, 0.5, 0.75, 0.9]
 
@@ -134,6 +139,10 @@ class EvalReporter:
             parent.mkdir(parents=True, exist_ok=True)
             stem = parent.name
             self._summary_df.to_csv(parent.parent / f"{stem}_summary.csv", index=False)
-            self._per_query_df.to_csv(parent.parent / f"{stem}_per_query.csv", index=False)
+            self._per_query_df.to_csv(
+                parent.parent / f"{stem}_per_query.csv", index=False
+            )
         else:
-            raise ValueError(f"Unknown which: {which!r}. Use 'per_query', 'summary', or 'all'.")
+            raise ValueError(
+                f"Unknown which: {which!r}. Use 'per_query', 'summary', or 'all'."
+            )

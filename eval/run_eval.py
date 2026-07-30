@@ -1,18 +1,18 @@
-import json
-import time
 import argparse
-from pathlib import Path
+import json
 import os
 import shutil
 import sys
+import time
+from pathlib import Path
 
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from eval.analyzer import EvalReporter
 from ingest import AtlasIngestor
 from reranker import AtlasReRanker
-from eval.analyzer import EvalReporter
 
 
 def resolve_safe_path(path: str) -> Path:

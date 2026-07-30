@@ -28,10 +28,12 @@ def test_ask_with_chain_returns_answer_and_sources():
     )
     assert result["answer"] == "final answer"
     assert result["source_documents"] == reranker.rerank.return_value
-    pipeline._chain.invoke.assert_called_once_with({
-        "context": "doc2\n\ndoc1",
-        "query": "test query",
-    })
+    pipeline._chain.invoke.assert_called_once_with(
+        {
+            "context": "doc2\n\ndoc1",
+            "query": "test query",
+        }
+    )
 
 
 def test_ask_returns_no_documents_message_when_empty():

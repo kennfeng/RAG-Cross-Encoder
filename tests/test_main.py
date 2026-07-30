@@ -1,6 +1,7 @@
-import main
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from main import AtlasRAG
 
 
@@ -34,7 +35,9 @@ def test_ask_reranks_candidates_and_returns_llm_response(mock_pipeline):
     result = rag.ask("query")
 
     assert result["answer"] == "This is a concise answer."
-    assert result["source_documents"] == mock_pipeline.ask.return_value["source_documents"]
+    assert (
+        result["source_documents"] == mock_pipeline.ask.return_value["source_documents"]
+    )
 
 
 def test_ask_returns_error_message_when_llm_fails(mock_pipeline):

@@ -51,7 +51,9 @@ class AtlasIngestor:
     ) -> None:
         if chunk_size is not None and chunk_size > 0:
             chunked_texts: list[str] = []
-            chunked_metadata: list[dict[str, Any]] | None = [] if metadata_list is not None else None
+            chunked_metadata: list[dict[str, Any]] | None = (
+                [] if metadata_list is not None else None
+            )
             chunked_ids: list[str] = []
 
             for i, text in enumerate(text_list):
@@ -61,7 +63,9 @@ class AtlasIngestor:
                 for j, chunk in enumerate(chunks):
                     chunked_texts.append(chunk)
                     if chunked_metadata is not None:
-                        chunked_metadata.append({**(meta or {}), "_chunk_index": j, "_parent_id": doc_id})
+                        chunked_metadata.append(
+                            {**(meta or {}), "_chunk_index": j, "_parent_id": doc_id}
+                        )
                     chunked_ids.append(f"{doc_id}_chunk_{j}")
 
             text_list = chunked_texts
@@ -122,4 +126,4 @@ if __name__ == "__main__":
     print(f"\nQuery: {query}")
     print("Top Candidate Matches:")
     for i, doc in enumerate(candidates):
-        print(f"{i+1}. {doc}")
+        print(f"{i + 1}. {doc}")

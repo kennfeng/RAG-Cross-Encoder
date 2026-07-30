@@ -1,4 +1,5 @@
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -15,7 +16,7 @@ from reranker import AtlasReRanker
 SYSTEM_PROMPT = (
     "You are a helpful AI assistant. Answer the user's question based only on the "
     "provided context. If the context does not contain enough information to answer "
-    "the question, say \"I don't have enough information to answer this question.\" "
+    'the question, say "I don\'t have enough information to answer this question." '
     "Do not make up or infer information beyond what is stated in the context. "
     "Cite specific parts of the context when possible."
 )
@@ -33,10 +34,12 @@ class LangChainRAG:
         self.retriever = retriever
         self.reranker = reranker
         self.llm = llm
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", SYSTEM_PROMPT),
-            ("human", HUMAN_TEMPLATE),
-        ])
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", SYSTEM_PROMPT),
+                ("human", HUMAN_TEMPLATE),
+            ]
+        )
         self._chain: Runnable | None = None
 
     @property
@@ -77,10 +80,16 @@ class LangChainRAG:
 
         llm_kwargs: dict[str, Any] = {"temperature": temperature}
         if max_tokens is not None:
-            llm_kwargs["num_predict" if provider == "ollama" else "max_tokens"] = max_tokens
+            llm_kwargs["num_predict" if provider == "ollama" else "max_tokens"] = (
+                max_tokens
+            )
 
-        primary_llm = create_llm(provider=provider, model_name=llm_model_name, **llm_kwargs)
-        fallback_llm = create_llm(provider=provider, model_name=llm_model_name, **llm_kwargs)
+        primary_llm = create_llm(
+            provider=provider, model_name=llm_model_name, **llm_kwargs
+        )
+        fallback_llm = create_llm(
+            provider=provider, model_name=llm_model_name, **llm_kwargs
+        )
         llm = primary_llm.with_fallbacks([fallback_llm])
 
         return cls(retriever, reranker, llm)
@@ -103,10 +112,12 @@ class LangChainRAG:
                 "source_documents": [],
             }
 
-        answer = self.chain.invoke({
-            "context": prepared["context"],
-            "query": query,
-        })
+        answer = self.chain.invoke(
+            {
+                "context": prepared["context"],
+                "query": query,
+            }
+        )
         return {
             "answer": answer,
             "source_documents": prepared["source_documents"],
@@ -118,8 +129,9 @@ class LangChainRAG:
             yield "I couldn't find any relevant documents in the database."
             return
 
-        for chunk in self.chain.stream({
-            "context": prepared["context"],
-            "query": query,
-        }):
-            yield chunk
+        yield from self.chain.stream(
+            {
+                "context": prepared["context"],
+                "query": query,
+            }
+        )

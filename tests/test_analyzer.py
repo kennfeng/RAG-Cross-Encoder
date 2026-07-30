@@ -1,9 +1,10 @@
 import json
-import pytest
-import pandas as pd
 from pathlib import Path
-from eval.analyzer import EvalReporter
 
+import pandas as pd
+import pytest
+
+from eval.analyzer import EvalReporter
 
 SAMPLE_RESULTS = {
     "config": {"k": 3, "retrieve_n": 25, "num_queries": 4},
@@ -135,16 +136,72 @@ def sample_reporter_2():
         ],
         "per_query": {
             "retrieval_only": [
-                {"query": "What is RAG?", "retrieved_ids": [], "precision": 0.8, "hit_rate": 1.0, "mrr": 0.6, "latency_ms": 110.0},
-                {"query": "How does a cross-encoder work?", "retrieved_ids": [], "precision": 0.4, "hit_rate": 1.0, "mrr": 0.4, "latency_ms": 210.0},
-                {"query": "Why chunk documents?", "retrieved_ids": [], "precision": 0.6, "hit_rate": 1.0, "mrr": 0.6, "latency_ms": 75.0},
-                {"query": "What is quantization?", "retrieved_ids": [], "precision": 0.6, "hit_rate": 1.0, "mrr": 0.6, "latency_ms": 85.0},
+                {
+                    "query": "What is RAG?",
+                    "retrieved_ids": [],
+                    "precision": 0.8,
+                    "hit_rate": 1.0,
+                    "mrr": 0.6,
+                    "latency_ms": 110.0,
+                },
+                {
+                    "query": "How does a cross-encoder work?",
+                    "retrieved_ids": [],
+                    "precision": 0.4,
+                    "hit_rate": 1.0,
+                    "mrr": 0.4,
+                    "latency_ms": 210.0,
+                },
+                {
+                    "query": "Why chunk documents?",
+                    "retrieved_ids": [],
+                    "precision": 0.6,
+                    "hit_rate": 1.0,
+                    "mrr": 0.6,
+                    "latency_ms": 75.0,
+                },
+                {
+                    "query": "What is quantization?",
+                    "retrieved_ids": [],
+                    "precision": 0.6,
+                    "hit_rate": 1.0,
+                    "mrr": 0.6,
+                    "latency_ms": 85.0,
+                },
             ],
             "retrieval_plus_rerank": [
-                {"query": "What is RAG?", "retrieved_ids": [], "precision": 0.6, "hit_rate": 1.0, "mrr": 1.0, "latency_ms": 5600.0},
-                {"query": "How does a cross-encoder work?", "retrieved_ids": [], "precision": 0.4, "hit_rate": 1.0, "mrr": 0.6, "latency_ms": 7200.0},
-                {"query": "Why chunk documents?", "retrieved_ids": [], "precision": 0.6, "hit_rate": 1.0, "mrr": 0.6, "latency_ms": 6100.0},
-                {"query": "What is quantization?", "retrieved_ids": [], "precision": 0.4, "hit_rate": 1.0, "mrr": 1.0, "latency_ms": 5100.0},
+                {
+                    "query": "What is RAG?",
+                    "retrieved_ids": [],
+                    "precision": 0.6,
+                    "hit_rate": 1.0,
+                    "mrr": 1.0,
+                    "latency_ms": 5600.0,
+                },
+                {
+                    "query": "How does a cross-encoder work?",
+                    "retrieved_ids": [],
+                    "precision": 0.4,
+                    "hit_rate": 1.0,
+                    "mrr": 0.6,
+                    "latency_ms": 7200.0,
+                },
+                {
+                    "query": "Why chunk documents?",
+                    "retrieved_ids": [],
+                    "precision": 0.6,
+                    "hit_rate": 1.0,
+                    "mrr": 0.6,
+                    "latency_ms": 6100.0,
+                },
+                {
+                    "query": "What is quantization?",
+                    "retrieved_ids": [],
+                    "precision": 0.4,
+                    "hit_rate": 1.0,
+                    "mrr": 1.0,
+                    "latency_ms": 5100.0,
+                },
             ],
         },
     }

@@ -24,7 +24,9 @@ class AtlasReRanker:
 
     def _score_pairs(self, pairs):
         scores = self.model.predict(pairs, batch_size=self.batch_size)
-        ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+        ranked_indices = sorted(
+            range(len(scores)), key=lambda i: scores[i], reverse=True
+        )
         return scores, ranked_indices
 
     def rerank(self, query, documents, top_n=3):
@@ -71,4 +73,4 @@ if __name__ == "__main__":
 
     print("\nTop Ranked Results:")
     for i, res in enumerate(ranked):
-        print(f"{i+1}. [Score: {res['score']:.4f}] {res['document']}")
+        print(f"{i + 1}. [Score: {res['score']:.4f}] {res['document']}")

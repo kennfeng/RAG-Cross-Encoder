@@ -11,7 +11,9 @@ def make_reranker():
 
 def test_rerank_orders_documents_by_descending():
     reranker = make_reranker()
-    with patch.object(reranker.model, "predict", return_value=np.array([0.2, 0.5, 0.3])):
+    with patch.object(
+        reranker.model, "predict", return_value=np.array([0.2, 0.5, 0.3])
+    ):
         documents = ["low", "high", "mid"]
         results = reranker.rerank("query", documents, top_n=3)
 
@@ -25,7 +27,9 @@ def test_rerank_orders_documents_by_descending():
 
 def test_rerank_with_ids_orders_candidates_and_includes_ids():
     reranker = make_reranker()
-    with patch.object(reranker.model, "predict", return_value=np.array([0.1, 0.9, 0.5])):
+    with patch.object(
+        reranker.model, "predict", return_value=np.array([0.1, 0.9, 0.5])
+    ):
         candidates = [("id_1", "low"), ("id_2", "high"), ("id_3", "mid")]
         results = reranker.rerank_with_ids("query", candidates, top_n=2)
 

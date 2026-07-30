@@ -32,9 +32,9 @@ class AtlasRAG:
         print(f"\n[QUERY]: {query}")
         try:
             return self.pipeline.ask(query)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return {
-                "answer": f"ERROR: Could not connect to Ollama ({str(e)})",
+                "answer": f"ERROR: Could not connect to Ollama ({e!s})",
                 "source_documents": [],
             }
 
@@ -55,6 +55,6 @@ if __name__ == "__main__":
             if result["source_documents"]:
                 print("\n--- SOURCES (Re-ranked) ---")
                 for i, src in enumerate(result["source_documents"]):
-                    print(f"{i+1}. [{src['score']:.4f}] {src['document']}")
+                    print(f"{i + 1}. [{src['score']:.4f}] {src['document']}")
         except KeyboardInterrupt:
             break

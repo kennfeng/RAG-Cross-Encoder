@@ -1,13 +1,11 @@
-import json
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pandas as pd
+import pytest
 
 from eval import run_eval
 from eval.analyzer import EvalReporter
-
 
 RESULTS_JSON = Path(__file__).resolve().parent.parent / "eval" / "results.json"
 

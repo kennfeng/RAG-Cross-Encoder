@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from ingest import _chunk_text, AtlasIngestor
+from ingest import AtlasIngestor, _chunk_text
 
 
 def make_mock_ingestor():
@@ -163,7 +163,9 @@ def test_add_documents_with_chunking_and_metadata():
 
     long_text = "word " * 100
     metadata = [{"source": "test"}]
-    ingestor.add_documents([long_text], metadata_list=metadata, chunk_size=30, chunk_overlap=5)
+    ingestor.add_documents(
+        [long_text], metadata_list=metadata, chunk_size=30, chunk_overlap=5
+    )
 
     add_kwargs = ingestor.collection.add.call_args
     metadatas = add_kwargs[1]["metadatas"]
@@ -175,7 +177,9 @@ def test_add_documents_with_chunking_and_metadata():
 
 
 def test_accepts_custom_embedding_model():
-    ingestor = AtlasIngestor(db_path="test_db", embedding_model_name="all-mpnet-base-v2")
+    ingestor = AtlasIngestor(
+        db_path="test_db", embedding_model_name="all-mpnet-base-v2"
+    )
     assert ingestor.emb_fn is not None
     assert ingestor.collection is not None
 

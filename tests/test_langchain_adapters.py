@@ -1,6 +1,7 @@
 import sys
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from langchain_core.messages import HumanMessage
 
 from langchain_adapters import (
@@ -46,7 +47,6 @@ def test_cross_encoder_reranker_adapter_reranks_candidates():
     )
     assert results == [{"id": "id_2", "document": "high", "score": 0.9}]
 
-    
 
 class TestCreateLLM:
     def test_create_llm_ollama_returns_chat_ollama(self):
@@ -59,13 +59,15 @@ class TestCreateLLM:
     def test_create_llm_default_provider_is_ollama(self):
         with patch("langchain_ollama.ChatOllama") as mock_cls:
             mock_cls.return_value = MagicMock()
-            llm = create_llm(model_name="llama3.2:1b")
+            create_llm(model_name="llama3.2:1b")
             mock_cls.assert_called_once_with(model="llama3.2:1b")
 
     def test_create_llm_openai_import_error(self):
-        with patch.dict(sys.modules, {"langchain_openai": None}):
-            with pytest.raises(ImportError, match="langchain-openai"):
-                create_llm(provider="openai", model_name="gpt-4o")
+        with (
+            patch.dict(sys.modules, {"langchain_openai": None}),
+            pytest.raises(ImportError, match="langchain-openai"),
+        ):
+            create_llm(provider="openai", model_name="gpt-4o")
 
     def test_create_llm_openai_when_installed(self):
         mock_openai_cls = MagicMock()
