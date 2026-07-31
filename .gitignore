@@ -8,8 +8,20 @@ eval_db/
 
 # Generated CSV exports
 *.csv
+exports/
+
+# Virtual environment
+.venv/
+venv/
+
+# Cache directories
+.pytest_cache/
+.ruff_cache/
 
 # Python temporary files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Environment variables
+.env

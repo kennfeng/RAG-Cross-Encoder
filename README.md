@@ -28,7 +28,10 @@ Answer
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
+   pip install langchain-ollama
    ```
+   `langchain-ollama` is required for the default Ollama provider. For the
+   "openai" provider, install `langchain-openai` instead.
 3. Pull the required LLM:
    ```bash
    ollama pull llama3.2:1b
@@ -80,10 +83,13 @@ python eval/run_eval.py
 |---|---|
 | `--k` | Number of top results to evaluate (default: 3) |
 | `--retrieve-n` | Candidates to retrieve before re-ranking (default: 10) |
+| `--dataset` | Path to the eval dataset JSON (default: `eval/eval_dataset.json`) |
+| `--db-path` | Path to the ChromaDB directory (default: `eval/eval_db`, must be under `eval/`) |
 | `--output` | Save results as JSON |
 | `--export-csv` | Export summary and per_query CSVs via EvalReporter |
 | `--compare` | Path to another results JSON for side-by-side comparison |
 | `--keep-db` | Keep the ChromaDB database after evaluation |
+| `--yes` | Confirm destructive removal of an existing database at `--db-path` (required if one exists) |
 
 #### Evaluation Results
 
