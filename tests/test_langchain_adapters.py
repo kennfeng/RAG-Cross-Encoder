@@ -11,17 +11,6 @@ from langchain_adapters import (
 )
 
 
-def test_chroma_retriever_adapter_uses_ingestor_search():
-    ingestor = MagicMock()
-    ingestor.search.return_value = ["doc1", "doc2"]
-
-    adapter = ChromaRetrieverAdapter(ingestor, n_results=5)
-    results = adapter.get_relevant_documents("query")
-
-    ingestor.search.assert_called_once_with("query", n_results=5)
-    assert results == ["doc1", "doc2"]
-
-
 def test_chroma_retriever_adapter_uses_ingestor_search_with_ids():
     ingestor = MagicMock()
     ingestor.search_with_ids.return_value = [("id_1", "doc1")]
@@ -92,8 +81,8 @@ class TestCreateLLM:
         response = MagicMock()
         response.content = "hello"
         with patch("langchain_ollama.ChatOllama") as mock_cls:
-            mock_cls.return_value = MagicMock()
             mock_cls.return_value.invoke.return_value = response
             llm = create_llm(provider="ollama", model_name="test")
+            mock_cls.assert_called_once_with(model="test")
             result = llm.invoke([HumanMessage(content="hi")])
             assert result.content == "hello"

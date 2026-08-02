@@ -2,6 +2,9 @@ from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 
+from ingest import AtlasIngestor
+from reranker import AtlasReRanker
+
 
 def create_llm(
     provider: str = "ollama",
@@ -27,19 +30,16 @@ def create_llm(
 
 
 class ChromaRetrieverAdapter:
-    def __init__(self, ingestor: Any, n_results: int = 10) -> None:
+    def __init__(self, ingestor: AtlasIngestor, n_results: int = 10) -> None:
         self.ingestor = ingestor
         self.n_results = n_results
-
-    def get_relevant_documents(self, query: str) -> list[str]:
-        return self.ingestor.search(query, n_results=self.n_results)
 
     def get_relevant_documents_with_ids(self, query: str) -> list[tuple[str, str]]:
         return self.ingestor.search_with_ids(query, n_results=self.n_results)
 
 
 class CrossEncoderRerankerAdapter:
-    def __init__(self, ranker: Any, top_n: int = 3) -> None:
+    def __init__(self, ranker: AtlasReRanker, top_n: int = 3) -> None:
         self.ranker = ranker
         self.top_n = top_n
 

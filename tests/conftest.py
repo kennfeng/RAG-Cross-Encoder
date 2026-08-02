@@ -12,4 +12,3 @@ sys.modules["torch"] = torch_mock
 sys.modules["sentence_transformers"] = MagicMock()
 sys.modules["chromadb"] = MagicMock()
 sys.modules["chromadb.utils"] = MagicMock()
-sys.modules["ollama"] = MagicMock()
