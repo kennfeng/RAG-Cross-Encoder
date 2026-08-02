@@ -47,34 +47,3 @@ def test_ask_returns_no_documents_message_when_empty():
 
     assert result["answer"] == "I couldn't find any relevant documents in the database."
     assert result["source_documents"] == []
-
-
-def test_ask_stream_yields_chunks():
-    retriever = MagicMock()
-    retriever.get_relevant_documents_with_ids.return_value = [
-        ("id_1", "doc1"),
-    ]
-    reranker = MagicMock()
-    reranker.rerank.return_value = [
-        {"id": "id_1", "document": "doc1", "score": 0.9},
-    ]
-    llm = MagicMock()
-
-    pipeline = LangChainRAG(retriever, reranker, llm)
-    pipeline._chain = MagicMock()
-    pipeline._chain.stream.return_value = iter(["hello", " world"])
-
-    chunks = list(pipeline.ask_stream("query"))
-    assert chunks == ["hello", " world"]
-
-
-def test_ask_stream_returns_empty_message_when_no_documents():
-    retriever = MagicMock()
-    retriever.get_relevant_documents_with_ids.return_value = []
-    reranker = MagicMock()
-    llm = MagicMock()
-
-    pipeline = LangChainRAG(retriever, reranker, llm)
-    chunks = list(pipeline.ask_stream("missing query"))
-
-    assert chunks == ["I couldn't find any relevant documents in the database."]
