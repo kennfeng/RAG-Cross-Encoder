@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from ingest import AtlasIngestor, _chunk_text
 
 
@@ -157,6 +159,28 @@ def test_add_documents_with_chunking_none():
     )
 
 
+def test_add_documents_raises_when_overlap_exceeds_chunk_size():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.add = MagicMock()
+
+    with pytest.raises(ValueError):
+        ingestor.add_documents(["word " * 100], chunk_size=5, chunk_overlap=10)
+
+    ingestor.collection.add.assert_not_called()
+
+
+def test_add_documents_chunk_size_zero_disables_chunking():
+    ingestor = make_mock_ingestor()
+    ingestor.collection.add = MagicMock()
+
+    ingestor.add_documents(["word " * 100], chunk_size=0, chunk_overlap=10)
+    ingestor.collection.add.assert_called_once_with(
+        documents=["word " * 100],
+        metadatas=None,
+        ids=["id_0"],
+    )
+
+
 def test_add_documents_with_chunking_and_metadata():
     ingestor = make_mock_ingestor()
     ingestor.collection.add = MagicMock()
@@ -196,6 +220,22 @@ def test_chunk_text_returns_single_for_short_text():
     assert chunks == ["short text"]
 
 
-def test_chunk_text_returns_single_for_zero_chunk_size():
-    chunks = _chunk_text("some text", chunk_size=0, chunk_overlap=0)
-    assert chunks == ["some text"]
+def test_chunk_text_raises_for_zero_chunk_size():
+    with pytest.raises(ValueError):
+        _chunk_text("some text", chunk_size=0, chunk_overlap=0)
+
+
+def test_chunk_text_raises_when_overlap_equals_chunk_size():
+    with pytest.raises(ValueError):
+        _chunk_text("word " * 100, chunk_size=10, chunk_overlap=10)
+
+
+def test_chunk_text_raises_when_overlap_exceeds_chunk_size():
+    with pytest.raises(ValueError):
+        _chunk_text("word " * 100, chunk_size=10, chunk_overlap=11)
+
+
+def test_chunk_text_accepts_max_valid_overlap():
+    chunks = _chunk_text("word " * 100, chunk_size=10, chunk_overlap=9)
+    assert len(chunks) > 1
+    assert all(isinstance(c, str) for c in chunks)

@@ -3,14 +3,21 @@ from typing import Any
 import chromadb
 from chromadb.utils import embedding_functions
 
+from sample_data import SAMPLE_DOCUMENTS
+
 
 def _chunk_text(
     text: str,
     chunk_size: int = 512,
     chunk_overlap: int = 64,
 ) -> list[str]:
-    if chunk_size <= 0:
-        return [text]
+    if chunk_size < 1:
+        raise ValueError(f"chunk_size must be >= 1, got {chunk_size}")
+    if chunk_overlap >= chunk_size:
+        raise ValueError(
+            f"chunk_overlap must be < chunk_size, got chunk_overlap={chunk_overlap}, "
+            f"chunk_size={chunk_size}"
+        )
     words = text.split()
     chunks = []
     start = 0
@@ -50,6 +57,11 @@ class AtlasIngestor:
         chunk_overlap: int = 64,
     ) -> None:
         if chunk_size is not None and chunk_size > 0:
+            if chunk_overlap >= chunk_size:
+                raise ValueError(
+                    f"chunk_overlap must be < chunk_size, got chunk_overlap={chunk_overlap}, "
+                    f"chunk_size={chunk_size}"
+                )
             chunked_texts: list[str] = []
             chunked_metadata: list[dict[str, Any]] | None = (
                 [] if metadata_list is not None else None
@@ -107,16 +119,7 @@ class AtlasIngestor:
 if __name__ == "__main__":
     ingestor = AtlasIngestor()
 
-    sample_kb = [
-        "PyTorch is an open source machine learning framework based on the Torch library.",
-        "TensorFlow is a free and open-source software library for machine learning and artificial intelligence.",
-        "RAG stands for Retrieval-Augmented Generation, a technique to provide external data to LLMs.",
-        "A Cross-Encoder is a type of deep learning model that processes pairs of inputs simultaneously.",
-        "Vector databases like ChromaDB store high-dimensional embeddings for fast similarity search.",
-        "Gradient descent is an optimization algorithm used to minimize the loss function in ML models.",
-        "Transformers are a type of neural network architecture that has revolutionized NLP.",
-        "Ollama allows you to run large language models locally on your machine.",
-    ]
+    sample_kb = [text for _, text in SAMPLE_DOCUMENTS]
 
     ingestor.add_documents(sample_kb)
 
