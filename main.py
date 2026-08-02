@@ -1,6 +1,7 @@
 from typing import Any
 
-from langchain_adapters import create_llm
+import httpx
+
 from rag_pipeline import LangChainRAG
 
 
@@ -26,15 +27,14 @@ class AtlasRAG:
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        self.llm = create_llm(provider=provider, model_name=model)
 
     def ask(self, query: str) -> dict[str, Any]:
         print(f"\n[QUERY]: {query}")
         try:
             return self.pipeline.ask(query)
-        except Exception as e:
+        except (ConnectionError, httpx.TransportError) as e:
             return {
-                "answer": f"ERROR: Could not connect to Ollama ({e!s})",
+                "answer": f"ERROR: Could not connect to Ollama ({type(e).__name__}: {e})",
                 "source_documents": [],
             }
 
@@ -56,5 +56,5 @@ if __name__ == "__main__":
                 print("\n--- SOURCES (Re-ranked) ---")
                 for i, src in enumerate(result["source_documents"]):
                     print(f"{i + 1}. [{src['score']:.4f}] {src['document']}")
-        except KeyboardInterrupt:
+        except (EOFError, KeyboardInterrupt):
             break
