@@ -1,20 +1,29 @@
+from collections.abc import Sequence
+from typing import Any
+
+import numpy as np
 import torch
 from sentence_transformers import CrossEncoder
 
 
 class AtlasReRanker:
-    def __init__(self, model=None, model_name="BAAI/bge-reranker-base", batch_size=32):
+    def __init__(
+        self,
+        model: Any = None,
+        model_name: str = "BAAI/bge-reranker-base",
+        batch_size: int = 32,
+    ) -> None:
         if model is not None:
-            self.model = model
-            self.device = getattr(model, "device", "cpu")
-            self.batch_size = getattr(model, "batch_size", batch_size)
+            self.model: Any = model
+            self.device: str = getattr(model, "device", "cpu")
+            self.batch_size: int = getattr(model, "batch_size", batch_size)
             return
 
         print(f"Loading PyTorch Re-ranker model: {model_name}...")
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.batch_size = batch_size
+        self.device: str = "cuda" if torch.cuda.is_available() else "cpu"
+        self.batch_size: int = batch_size
         try:
-            self.model = CrossEncoder(model_name, device=self.device)
+            self.model: Any = CrossEncoder(model_name, device=self.device)
         except Exception as exc:
             raise RuntimeError(
                 f"Failed to load cross-encoder model '{model_name}'. "
@@ -22,14 +31,16 @@ class AtlasReRanker:
             ) from exc
         print(f"Model loaded on {self.device}")
 
-    def _score_pairs(self, pairs):
+    def _score_pairs(self, pairs: Sequence[list[str]]) -> tuple[np.ndarray, list[int]]:
         scores = self.model.predict(pairs, batch_size=self.batch_size)
         ranked_indices = sorted(
             range(len(scores)), key=lambda i: scores[i], reverse=True
         )
         return scores, ranked_indices
 
-    def rerank(self, query, documents, top_n=3):
+    def rerank(
+        self, query: str, documents: Sequence[str], top_n: int = 3
+    ) -> list[dict[str, Any]]:
         if not documents:
             return []
 
@@ -41,7 +52,9 @@ class AtlasReRanker:
             for i in ranked_indices[:top_n]
         ]
 
-    def rerank_with_ids(self, query, candidates, top_n=3):
+    def rerank_with_ids(
+        self, query: str, candidates: Sequence[tuple[str, str]], top_n: int = 3
+    ) -> list[dict[str, Any]]:
         if not candidates:
             return []
 
