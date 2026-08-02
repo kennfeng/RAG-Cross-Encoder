@@ -1,10 +1,12 @@
 import argparse
+import gc
 import json
 import os
 import shutil
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -27,12 +29,14 @@ def is_under_path(path: Path, base: Path) -> bool:
         return base == path or base in path.parents
 
 
-def validate_dataset_path(file_path: str) -> Path:
+def validate_dataset_path(file_path: str, base_dir: Path) -> Path:
     dataset_path = resolve_safe_path(str(file_path))
     if not dataset_path.exists() or not dataset_path.is_file():
         raise FileNotFoundError(
             f"Dataset path does not exist or is not a file: {dataset_path}"
         )
+    if not is_under_path(dataset_path, base_dir):
+        raise ValueError(f"Dataset path must be under {base_dir}: {dataset_path}")
     return dataset_path
 
 
@@ -45,29 +49,29 @@ def validate_db_path(db_path: str, base_dir: Path) -> Path:
     return resolved
 
 
-def load_dataset(file_path):
-    with open(file_path, "r") as f:
-        data = json.load(f)
-    return data
+def load_dataset(file_path: Path) -> dict[str, Any]:
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def precision_at_k(retrieved_ids, relevant_ids, k):
-    top_k = retrieved_ids[:k]
-    relevant_set = set(relevant_ids)
-
+def precision_at_k(retrieved_ids: list[str], relevant_ids: list[str], k: int) -> float:
     if k == 0:
         return 0.0
-
-    hits = sum(1 for rid in top_k if rid in relevant_set)
-    return hits / k
-
-
-def hit_rate_at_k(retrieved_ids, relevant_ids, k):
     top_k = retrieved_ids[:k]
-    return 1.0 if any(rid in relevant_ids for rid in top_k) else 0.0
+    if not top_k:
+        return 0.0
+    relevant_set = set(relevant_ids)
+    hits = sum(1 for rid in top_k if rid in relevant_set)
+    return hits / len(top_k)
 
 
-def reciprocal_rank(retrieved_ids, relevant_ids):
+def hit_rate_at_k(retrieved_ids: list[str], relevant_ids: list[str], k: int) -> float:
+    top_k = retrieved_ids[:k]
+    relevant_set = set(relevant_ids)
+    return 1.0 if any(rid in relevant_set for rid in top_k) else 0.0
+
+
+def reciprocal_rank(retrieved_ids: list[str], relevant_ids: list[str]) -> float:
     relevant_set = set(relevant_ids)
     for idx, rid in enumerate(retrieved_ids):
         if rid in relevant_set:
@@ -75,7 +79,9 @@ def reciprocal_rank(retrieved_ids, relevant_ids):
     return 0.0
 
 
-def run_retrieval_only(ingestor, query, n_results):
+def run_retrieval_only(
+    ingestor: AtlasIngestor, query: str, n_results: int
+) -> tuple[list[str], float]:
     start = time.perf_counter()
     candidates = ingestor.search_with_ids(query, n_results=n_results)
 
@@ -85,7 +91,13 @@ def run_retrieval_only(ingestor, query, n_results):
     return retrieved_ids, elapsed_ms
 
 
-def run_retrieval_plus_rerank(ingestor, ranker, query, n_results, top_n):
+def run_retrieval_plus_rerank(
+    ingestor: AtlasIngestor,
+    ranker: AtlasReRanker,
+    query: str,
+    n_results: int,
+    top_n: int,
+) -> tuple[list[str], float]:
     start = time.perf_counter()
     candidates = ingestor.search_with_ids(query, n_results=n_results)
     reranked = ranker.rerank_with_ids(query, candidates, top_n=top_n)
@@ -94,7 +106,9 @@ def run_retrieval_plus_rerank(ingestor, ranker, query, n_results, top_n):
     return retrieved_ids, elapsed_ms
 
 
-def summarize(name, per_query_results, k):
+def summarize(
+    name: str, per_query_results: list[dict[str, Any]], k: int
+) -> dict[str, Any]:
     if not per_query_results:
         return {
             "name": name,
@@ -118,7 +132,7 @@ def summarize(name, per_query_results, k):
     }
 
 
-def print_table(rows):
+def print_table(rows: list[dict[str, Any]]) -> None:
     if not rows:
         return
 
@@ -126,7 +140,7 @@ def print_table(rows):
     print(df.to_string(index=False))
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Evaluate RAG retrieval vs retrieval+re-ranking"
     )
@@ -172,15 +186,21 @@ def main():
     )
     args = parser.parse_args()
 
+    if args.k < 1 or args.k > args.retrieve_n:
+        raise ValueError(
+            f"--k ({args.k}) must be at least 1 and must not exceed --retrieve-n ({args.retrieve_n})"
+        )
+
     eval_base_dir = Path(__file__).parent.resolve()
-    args.dataset = validate_dataset_path(args.dataset)
+    args.dataset = validate_dataset_path(args.dataset, eval_base_dir)
     args.db_path = validate_db_path(args.db_path, eval_base_dir)
 
     data = load_dataset(args.dataset)
     corpus = data["corpus"]
     queries = data["queries"]
 
-    if args.db_path.exists() and not args.keep_db:
+    db_exists = args.db_path.exists()
+    if db_exists and not args.keep_db:
         if not args.yes:
             raise ValueError(
                 f"Refusing to remove existing database at {args.db_path}."
@@ -191,12 +211,24 @@ def main():
 
     print("Initializing Ingestor and ingesting corpus...")
     ingestor = AtlasIngestor(db_path=args.db_path)
+    if db_exists and args.keep_db:
+        print(f"Clearing existing collection at {args.db_path}...")
+        existing_ids = ingestor.collection.get()["ids"]
+        if existing_ids:
+            ingestor.collection.delete(ids=existing_ids)
     ingestor.add_documents(
         text_list=[doc["text"] for doc in corpus], ids=[doc["id"] for doc in corpus]
     )
 
     print("Loading cross-encoder model for re-ranking...")
     ranker = AtlasReRanker()
+
+    if queries:
+        print("Warming up retrieval and re-ranking...")
+        run_retrieval_only(ingestor, queries[0]["query"], args.retrieve_n)
+        run_retrieval_plus_rerank(
+            ingestor, ranker, queries[0]["query"], args.retrieve_n, args.k
+        )
 
     retrieval_results = []
     rerank_results = []
@@ -207,9 +239,8 @@ def main():
 
     for item in queries:
         query = item["query"]
-        relevant_ids = set(item["relevant_ids"])
+        relevant_ids = item["relevant_ids"]
 
-        # Stage 1
         ids_only, latency_only = run_retrieval_only(ingestor, query, args.retrieve_n)
         ids_only_at_k = ids_only[: args.k]
         retrieval_results.append(
@@ -218,12 +249,11 @@ def main():
                 "retrieved_ids": ids_only_at_k,
                 "precision": precision_at_k(ids_only, relevant_ids, args.k),
                 "hit_rate": hit_rate_at_k(ids_only, relevant_ids, args.k),
-                "mrr": reciprocal_rank(ids_only, relevant_ids),
+                "mrr": reciprocal_rank(ids_only_at_k, relevant_ids),
                 "latency_ms": latency_only,
             }
         )
 
-        # Stage 1 + 2
         ids_reranked, latency_rerank = run_retrieval_plus_rerank(
             ingestor, ranker, query, args.retrieve_n, args.k
         )
@@ -233,7 +263,7 @@ def main():
                 "retrieved_ids": ids_reranked,
                 "precision": precision_at_k(ids_reranked, relevant_ids, args.k),
                 "hit_rate": hit_rate_at_k(ids_reranked, relevant_ids, args.k),
-                "mrr": reciprocal_rank(ids_reranked, relevant_ids),
+                "mrr": reciprocal_rank(ids_reranked[: args.k], relevant_ids),
                 "latency_ms": latency_rerank,
             }
         )
@@ -275,7 +305,7 @@ def main():
     if args.export_csv:
         export_dir = Path(args.export_csv)
         reporter.export_csv(export_dir, which="all")
-        print(f"CSVs exported to {export_dir.parent}")
+        print(f"CSVs exported to {export_dir}")
 
     if args.compare:
         compare_path = Path(args.compare)
@@ -286,13 +316,14 @@ def main():
         print("\n" + "=" * 60)
         print(f"Comparison with k={other_reporter.config.get('k')}")
         print("=" * 60)
+        print(f"Baseline: {args.output or 'current run'}")
+        print(f"Compared: {compare_path}")
+        print("mean_*_delta = compared - baseline (positive means compared is better)")
         print(comparison.to_string(index=False))
 
     if not args.keep_db and os.path.exists(args.db_path):
-        # Release ChromaDB's file handles before attempting to delete
         del ingestor
         del ranker
-        import gc
 
         gc.collect()
 

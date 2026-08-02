@@ -156,11 +156,16 @@ class TestE2ERealResults:
         p50 = df[df["quantile"] == 0.5]["latency_ms"].iloc[0]
         p90 = df[df["quantile"] == 0.9]["latency_ms"].iloc[0]
         assert p50 < p90
+        assert (df["latency_ms"] > 0).all()
 
     def test_latency_percentiles_rerank(self):
         df = self.reporter.latency_percentiles("retrieval_plus_rerank")
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) == 5
         p50 = df[df["quantile"] == 0.5]["latency_ms"].iloc[0]
-        assert p50 > 1000
+        p90 = df[df["quantile"] == 0.9]["latency_ms"].iloc[0]
+        assert p50 < p90
+        assert (df["latency_ms"] > 0).all()
 
     def test_worst_queries_returns_sorted(self):
         df = self.reporter.worst_queries("retrieval_only", metric="mrr", n=5)
@@ -174,6 +179,9 @@ class TestE2ERealResults:
     def test_compare_same_reporter(self):
         df = self.reporter.compare(self.reporter)
         assert len(df) == 2
+        delta_cols = [col for col in df.columns if col.endswith("_delta")]
+        assert len(delta_cols) > 0
+        assert (df[delta_cols] == 0).all().all()
 
     def test_export_csv_summary(self, tmp_path):
         self.reporter.export_csv(tmp_path / "summary.csv", which="summary")
