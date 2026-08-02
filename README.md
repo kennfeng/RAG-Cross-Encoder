@@ -27,11 +27,9 @@ Answer
 1. Clone the repository and navigate to the directory.
 2. Install dependencies:
    ```bash
-   pip install -r requirements.txt
-   pip install langchain-ollama
+   pip install -r requirements.txt -r requirements-dev.txt
    ```
-   `langchain-ollama` is required for the default Ollama provider. For the
-   "openai" provider, install `langchain-openai` instead.
+   Runtime deps include the `langchain-ollama` (default provider) and `langchain-openai` adapters; `requirements-dev.txt` adds pytest, ruff, and numpy for development.
 3. Pull the required LLM:
    ```bash
    ollama pull llama3.2:1b
@@ -69,7 +67,7 @@ The test suite uses mocked ML dependencies (torch, sentence-transformers, chroma
 
 - **Unit tests**: ingest, reranker, adapters, pipeline, eval metrics
 - **E2E tests**: real `results.json` loaded through `EvalReporter` for analytics validation
-- **Integration tests**: full `AtlasRAG` wiring with mock LLM
+- **Wiring tests**: full `AtlasRAG` ask flow with mocked pipeline
 
 ### Evaluation
 
@@ -91,13 +89,15 @@ python eval/run_eval.py
 | `--keep-db` | Keep the ChromaDB database after evaluation |
 | `--yes` | Confirm destructive removal of an existing database at `--db-path` (required if one exists) |
 
+The first query is executed as a warm-up before latency timing begins, so cold-start costs do not pollute the reported latencies.
+
 #### Evaluation Results
 
 | Metric   | Retrieval Only | Retrieval + Re-rank |
 | -------- | -------------- | ------------------- |
 | Hit Rate | 100%           | 100%                |
 | MRR      | 0.467          | 0.733 (+57%)        |
-| Latency  | ~57 ms         | ~2.1 s (CPU)        |
+| Latency  | ~55 ms         | ~1.9 s (CPU)        |
 
 The cross-encoder improved Mean Reciprocal Rank (MRR) by 57%, proving it is significantly better at putting the most factual document at the #1 spot for the LLM.
 
@@ -141,7 +141,9 @@ RAG-Cross-Encoder/
 ├── reranker.py
 ├── rag_pipeline.py
 ├── langchain_adapters.py
+├── sample_data.py
 ├── requirements.txt
+├── requirements-dev.txt
 │
 ├── eval/
 │   ├── run_eval.py
