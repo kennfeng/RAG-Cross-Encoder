@@ -3,6 +3,13 @@ from pathlib import Path
 
 import pandas as pd
 
+_METRIC_COLUMNS = (
+    "mean_hit_rate",
+    "mean_precision",
+    "mean_mrr",
+    "mean_latency_ms",
+)
+
 
 class EvalReporter:
     """Pandas-backed evaluation reporter for RAG retrieval analysis."""
@@ -123,9 +130,14 @@ class EvalReporter:
         left = self.summary_df.copy()
         right = other.summary_df.copy()
 
-        combined = pd.concat([left, right], ignore_index=True)
-        combined = combined.drop_duplicates(subset=["name", "k"], keep="first")
-        return combined.reset_index(drop=True)
+        merged = left.merge(
+            right, on=["name", "k"], how="outer", suffixes=("", "_right")
+        )
+        for metric in _METRIC_COLUMNS:
+            merged[f"{metric}_delta"] = merged[f"{metric}_right"] - merged[metric]
+            merged[metric] = merged[metric].fillna(merged[f"{metric}_right"])
+        merged = merged.drop(columns=[f"{metric}_right" for metric in _METRIC_COLUMNS])
+        return merged.reset_index(drop=True)
 
     def export_csv(self, path: Path, which: str = "all") -> None:
         path = Path(path)
@@ -135,13 +147,10 @@ class EvalReporter:
         elif which == "summary":
             self._summary_df.to_csv(path, index=False)
         elif which == "all":
-            parent = path
-            parent.mkdir(parents=True, exist_ok=True)
-            stem = parent.name
-            self._summary_df.to_csv(parent.parent / f"{stem}_summary.csv", index=False)
-            self._per_query_df.to_csv(
-                parent.parent / f"{stem}_per_query.csv", index=False
-            )
+            out_dir = path
+            out_dir.mkdir(parents=True, exist_ok=True)
+            self._summary_df.to_csv(out_dir / "summary.csv", index=False)
+            self._per_query_df.to_csv(out_dir / "per_query.csv", index=False)
         else:
             raise ValueError(
                 f"Unknown which: {which!r}. Use 'per_query', 'summary', or 'all'."

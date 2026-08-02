@@ -1,3 +1,4 @@
+import copy
 import json
 from pathlib import Path
 
@@ -97,6 +98,14 @@ SAMPLE_RESULTS = {
         ],
     },
 }
+
+
+DELTA_COLUMNS = [
+    "mean_hit_rate_delta",
+    "mean_precision_delta",
+    "mean_mrr_delta",
+    "mean_latency_ms_delta",
+]
 
 
 @pytest.fixture
@@ -229,12 +238,15 @@ class TestConstruction:
         assert reporter.config == {}
         assert len(reporter.per_query_df) == 0
 
-    def test_from_increments(self):
+    def test_from_dict_populates_reporter_fields(self):
         reporter = EvalReporter.from_dict(SAMPLE_RESULTS)
-        per_q = reporter.per_query_df
-        assert len(per_q) == 8
-        assert "retrieval_only" in per_q["strategy"].values
-        assert "retrieval_plus_rerank" in per_q["strategy"].values
+        assert reporter.config["k"] == 3
+        assert len(reporter.summary_df) == 2
+        assert len(reporter.per_query_df) == 8
+        assert set(reporter.per_query_df["strategy"]) == {
+            "retrieval_only",
+            "retrieval_plus_rerank",
+        }
 
 
 # --- Per-query DataFrame ---
@@ -375,6 +387,9 @@ class TestCompare:
         df = sample_reporter.compare(sample_reporter_2)
         assert "k" in df.columns
         assert set(df["k"]) == {3, 5}
+        for column in DELTA_COLUMNS:
+            assert column in df.columns
+        assert df["mean_mrr_delta"].isna().all()
 
     def test_compare_preserves_all_strategies(self, sample_reporter, sample_reporter_2):
         df = sample_reporter.compare(sample_reporter_2)
@@ -383,6 +398,51 @@ class TestCompare:
     def test_compare_same_reporter(self, sample_reporter):
         df = sample_reporter.compare(sample_reporter)
         assert len(df) == 2
+        assert (df[DELTA_COLUMNS] == 0).all().all()
+
+    def test_compare_same_k_deltas(self, sample_reporter):
+        modified = copy.deepcopy(SAMPLE_RESULTS)
+        for entry in modified["summary"]:
+            entry["avg_mrr"] += 0.1
+            entry["avg_precision"] += 0.05
+            entry["avg_latency_ms"] -= 10.0
+        other = EvalReporter.from_dict(modified)
+        df = sample_reporter.compare(other)
+        assert len(df) == 2
+        by_name = df.set_index("name")
+        assert by_name.loc["Retrieval Only", "mean_mrr_delta"] == pytest.approx(0.1)
+        assert by_name.loc[
+            "Retrieval + Re-rank", "mean_precision_delta"
+        ] == pytest.approx(0.05)
+        assert by_name.loc["Retrieval Only", "mean_latency_ms_delta"] == pytest.approx(
+            -10.0
+        )
+        assert by_name.loc["Retrieval Only", "mean_hit_rate_delta"] == pytest.approx(
+            0.0
+        )
+
+    def test_compare_nan_delta_when_side_missing(self, sample_reporter):
+        modified = copy.deepcopy(SAMPLE_RESULTS)
+        modified["summary"].append(
+            {
+                "name": "Third Strategy",
+                "avg_hit_rate": 0.9,
+                "avg_precision": 0.4,
+                "avg_mrr": 0.6,
+                "avg_latency_ms": 50.0,
+                "k": 3,
+            }
+        )
+        other = EvalReporter.from_dict(modified)
+        df = sample_reporter.compare(other)
+        assert len(df) == 3
+        third = df[df["name"] == "Third Strategy"].iloc[0]
+        assert pd.isna(third["mean_mrr_delta"])
+        assert pd.isna(third["mean_precision_delta"])
+        assert third["mean_hit_rate"] == pytest.approx(0.9)
+        assert third["mean_precision"] == pytest.approx(0.4)
+        assert third["mean_mrr"] == pytest.approx(0.6)
+        assert third["mean_latency_ms"] == pytest.approx(50.0)
 
 
 # --- Export CSV ---
@@ -403,10 +463,22 @@ class TestExportCSV:
         loaded = pd.read_csv(path)
         assert len(loaded) == 2
 
-    def test_export_all_csv_creates_two_files(self, sample_reporter, tmp_path):
-        sample_reporter.export_csv(tmp_path / "export", which="all")
-        assert (tmp_path / "export_summary.csv").exists()
-        assert (tmp_path / "export_per_query.csv").exists()
+    def test_export_all_csv_creates_two_files_inside_dir(
+        self, sample_reporter, tmp_path
+    ):
+        out_dir = tmp_path / "export"
+        sample_reporter.export_csv(out_dir, which="all")
+        assert (out_dir / "summary.csv").exists()
+        assert (out_dir / "per_query.csv").exists()
+        loaded_summary = pd.read_csv(out_dir / "summary.csv")
+        loaded_per_query = pd.read_csv(out_dir / "per_query.csv")
+        assert len(loaded_summary) == 2
+        assert len(loaded_per_query) == 8
+
+    def test_export_all_writes_nothing_to_parent(self, sample_reporter, tmp_path):
+        out_dir = tmp_path / "exports"
+        sample_reporter.export_csv(out_dir, which="all")
+        assert set(tmp_path.iterdir()) == {out_dir}
 
     def test_export_invalid_which_raises(self, sample_reporter, tmp_path):
         with pytest.raises(ValueError, match="Unknown which"):
