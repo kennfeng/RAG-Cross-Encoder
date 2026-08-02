@@ -1,4 +1,3 @@
-from collections.abc import Generator
 from typing import Any
 
 from langchain_core.output_parsers import StrOutputParser
@@ -12,6 +11,7 @@ from langchain_adapters import (
     create_llm,
 )
 from reranker import AtlasReRanker
+from sample_data import SAMPLE_DOCUMENTS
 
 SYSTEM_PROMPT = (
     "You are a helpful AI assistant. Answer the user's question based only on the "
@@ -63,15 +63,7 @@ class LangChainRAG:
     ) -> "LangChainRAG":
         ingestor = AtlasIngestor(db_path=db_path)
         if ingestor.collection.count() == 0:
-            sample_kb = sample_docs or [
-                "PyTorch is an open source machine learning framework based on the Torch library.",
-                "TensorFlow is a free and open-source software library for machine learning and artificial intelligence.",
-                "RAG stands for Retrieval-Augmented Generation, a technique to provide external data to LLMs.",
-                "A Cross-Encoder is a type of deep learning model that processes pairs of inputs simultaneously to determine relevance.",
-                "Vector databases like ChromaDB store high-dimensional embeddings for fast similarity search.",
-                "Ollama allows you to run large language models locally on your machine.",
-                "Two-stage RAG uses a fast retriever (Stage 1) and a precise re-ranker (Stage 2) for better accuracy.",
-            ]
+            sample_kb = sample_docs or [text for _, text in SAMPLE_DOCUMENTS]
             ingestor.add_documents(sample_kb)
 
         ranker = AtlasReRanker(model_name=model_name)
@@ -84,13 +76,7 @@ class LangChainRAG:
                 max_tokens
             )
 
-        primary_llm = create_llm(
-            provider=provider, model_name=llm_model_name, **llm_kwargs
-        )
-        fallback_llm = create_llm(
-            provider=provider, model_name=llm_model_name, **llm_kwargs
-        )
-        llm = primary_llm.with_fallbacks([fallback_llm])
+        llm = create_llm(provider=provider, model_name=llm_model_name, **llm_kwargs)
 
         return cls(retriever, reranker, llm)
 
@@ -122,16 +108,3 @@ class LangChainRAG:
             "answer": answer,
             "source_documents": prepared["source_documents"],
         }
-
-    def ask_stream(self, query: str) -> Generator[str, None, None]:
-        prepared = self._prepare(query)
-        if not prepared["source_documents"]:
-            yield "I couldn't find any relevant documents in the database."
-            return
-
-        yield from self.chain.stream(
-            {
-                "context": prepared["context"],
-                "query": query,
-            }
-        )
