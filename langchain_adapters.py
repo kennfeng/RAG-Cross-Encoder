@@ -9,8 +9,12 @@ from reranker import AtlasReRanker
 def create_llm(
     provider: str = "ollama",
     model_name: str = "llama3.2:1b",
+    base_url: str | None = None,
     **kwargs: Any,
 ) -> BaseChatModel:
+    if base_url is not None:
+        kwargs["base_url"] = base_url
+
     if provider == "ollama":
         from langchain_ollama import ChatOllama
 

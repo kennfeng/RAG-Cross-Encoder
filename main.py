@@ -9,13 +9,14 @@ class AtlasRAG:
     def __init__(
         self,
         pipeline: LangChainRAG | None = None,
-        model: str = "llama3.2:1b",
-        provider: str = "ollama",
+        model: str | None = None,
+        provider: str | None = None,
         sample_docs: list[str] | None = None,
-        n_results: int = 10,
-        top_n: int = 3,
+        n_results: int | None = None,
+        top_n: int | None = None,
         temperature: float = 0.0,
         max_tokens: int | None = None,
+        base_url: str | None = None,
     ) -> None:
         print("--- Initializing RAG System ---")
         self.pipeline = pipeline or LangChainRAG.from_defaults(
@@ -26,6 +27,7 @@ class AtlasRAG:
             top_n=top_n,
             temperature=temperature,
             max_tokens=max_tokens,
+            base_url=base_url,
         )
 
     def ask(self, query: str) -> dict[str, Any]:

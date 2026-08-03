@@ -1,9 +1,10 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 
 from main import AtlasRAG
+from rag_pipeline import LangChainRAG
 
 
 @pytest.fixture
@@ -82,3 +83,23 @@ def test_ask_forwards_to_pipeline(mock_pipeline):
     rag = AtlasRAG(pipeline=mock_pipeline)
     rag.ask("hello")
     mock_pipeline.ask.assert_called_once_with("hello")
+
+
+def test_atlas_rag_forwards_base_url():
+    mock_from_defaults = MagicMock()
+    with patch.object(LangChainRAG, "from_defaults", mock_from_defaults):
+        AtlasRAG(base_url="http://x")
+    kwargs = mock_from_defaults.call_args.kwargs
+    assert kwargs["base_url"] == "http://x"
+
+
+def test_atlas_rag_defaults_are_env_resolvable():
+    mock_from_defaults = MagicMock()
+    with patch.object(LangChainRAG, "from_defaults", mock_from_defaults):
+        AtlasRAG()
+    kwargs = mock_from_defaults.call_args.kwargs
+    assert kwargs["llm_model_name"] is None
+    assert kwargs["provider"] is None
+    assert kwargs["n_results"] is None
+    assert kwargs["top_n"] is None
+    assert kwargs["base_url"] is None

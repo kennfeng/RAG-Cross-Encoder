@@ -116,12 +116,28 @@ class AtlasIngestor:
         return list(zip(results["ids"][0], results["documents"][0]))
 
 
+def ensure_seeded(
+    db_path: str,
+    texts: list[str],
+    ids: list[str] | None = None,
+) -> bool:
+    ingestor = AtlasIngestor(db_path=db_path)
+    if ingestor.collection.count() == 0:
+        ingestor.add_documents(text_list=texts, ids=ids)
+        return True
+    if ids is not None:
+        existing_ids = ingestor.collection.get()["ids"]
+        if existing_ids:
+            ingestor.collection.delete(ids=existing_ids)
+        ingestor.add_documents(text_list=texts, ids=ids)
+        return True
+    return False
+
+
 if __name__ == "__main__":
+    ensure_seeded(db_path="./atlas_db", texts=[text for _, text in SAMPLE_DOCUMENTS])
+
     ingestor = AtlasIngestor()
-
-    sample_kb = [text for _, text in SAMPLE_DOCUMENTS]
-
-    ingestor.add_documents(sample_kb)
 
     query = "What is RAG and why use a vector DB?"
     candidates = ingestor.search(query, n_results=3)

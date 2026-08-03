@@ -86,3 +86,23 @@ class TestCreateLLM:
             mock_cls.assert_called_once_with(model="test")
             result = llm.invoke([HumanMessage(content="hi")])
             assert result.content == "hello"
+
+    def test_create_llm_ollama_forwards_base_url(self):
+        with patch("langchain_ollama.ChatOllama") as mock_cls:
+            mock_cls.return_value = MagicMock()
+            create_llm(provider="ollama", model_name="m", base_url="http://x")
+            mock_cls.assert_called_once_with(model="m", base_url="http://x")
+
+    def test_create_llm_openai_forwards_base_url(self):
+        mock_openai_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.ChatOpenAI = mock_openai_cls
+        with patch.dict("sys.modules", {"langchain_openai": mock_module}):
+            create_llm(provider="openai", model_name="gpt", base_url="http://x")
+            mock_openai_cls.assert_called_once_with(model="gpt", base_url="http://x")
+
+    def test_create_llm_omits_base_url_when_none(self):
+        with patch("langchain_ollama.ChatOllama") as mock_cls:
+            mock_cls.return_value = MagicMock()
+            create_llm(provider="ollama", model_name="m")
+            mock_cls.assert_called_once_with(model="m")

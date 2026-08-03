@@ -1,8 +1,8 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ingest import AtlasIngestor, _chunk_text
+from ingest import AtlasIngestor, _chunk_text, ensure_seeded
 
 
 def make_mock_ingestor():
@@ -239,3 +239,58 @@ def test_chunk_text_accepts_max_valid_overlap():
     chunks = _chunk_text("word " * 100, chunk_size=10, chunk_overlap=9)
     assert len(chunks) > 1
     assert all(isinstance(c, str) for c in chunks)
+
+
+def test_ensure_seeded_seeds_empty_collection():
+    mock_ingestor = MagicMock()
+    mock_ingestor.collection.count.return_value = 0
+    with patch("ingest.AtlasIngestor", return_value=mock_ingestor):
+        seeded = ensure_seeded("test_db", ["doc1", "doc2"], ids=["id_1", "id_2"])
+    assert seeded is True
+    mock_ingestor.add_documents.assert_called_once_with(
+        text_list=["doc1", "doc2"], ids=["id_1", "id_2"]
+    )
+
+
+def test_ensure_seeded_seeds_empty_collection_without_ids():
+    mock_ingestor = MagicMock()
+    mock_ingestor.collection.count.return_value = 0
+    with patch("ingest.AtlasIngestor", return_value=mock_ingestor):
+        seeded = ensure_seeded("test_db", ["doc1"])
+    assert seeded is True
+    mock_ingestor.add_documents.assert_called_once_with(text_list=["doc1"], ids=None)
+
+
+def test_ensure_seeded_noop_on_populated_collection():
+    mock_ingestor = MagicMock()
+    mock_ingestor.collection.count.return_value = 2
+    with patch("ingest.AtlasIngestor", return_value=mock_ingestor):
+        seeded = ensure_seeded("test_db", ["doc1"])
+    assert seeded is False
+    mock_ingestor.add_documents.assert_not_called()
+
+
+def test_ensure_seeded_clears_and_reingests_when_ids_given_and_populated():
+    mock_ingestor = MagicMock()
+    mock_ingestor.collection.count.return_value = 2
+    mock_ingestor.collection.get.return_value = {"ids": ["old_1", "old_2"]}
+    with patch("ingest.AtlasIngestor", return_value=mock_ingestor):
+        seeded = ensure_seeded("test_db", ["doc1"], ids=["new_1"])
+    assert seeded is True
+    mock_ingestor.collection.delete.assert_called_once_with(ids=["old_1", "old_2"])
+    mock_ingestor.add_documents.assert_called_once_with(
+        text_list=["doc1"], ids=["new_1"]
+    )
+
+
+def test_ensure_seeded_skips_delete_when_collection_has_no_existing_ids():
+    mock_ingestor = MagicMock()
+    mock_ingestor.collection.count.return_value = 2
+    mock_ingestor.collection.get.return_value = {"ids": []}
+    with patch("ingest.AtlasIngestor", return_value=mock_ingestor):
+        seeded = ensure_seeded("test_db", ["doc1"], ids=["new_1"])
+    assert seeded is True
+    mock_ingestor.collection.delete.assert_not_called()
+    mock_ingestor.add_documents.assert_called_once_with(
+        text_list=["doc1"], ids=["new_1"]
+    )

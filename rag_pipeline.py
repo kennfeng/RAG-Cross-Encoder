@@ -1,10 +1,11 @@
+import os
 from typing import Any
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from ingest import AtlasIngestor
+from ingest import AtlasIngestor, ensure_seeded
 from langchain_adapters import (
     ChromaRetrieverAdapter,
     CrossEncoderRerankerAdapter,
@@ -51,20 +52,51 @@ class LangChainRAG:
     @classmethod
     def from_defaults(
         cls,
-        db_path: str = "./atlas_db",
-        model_name: str = "BAAI/bge-reranker-base",
-        llm_model_name: str = "llama3.2:1b",
-        provider: str = "ollama",
-        n_results: int = 10,
-        top_n: int = 3,
+        db_path: str | None = None,
+        model_name: str | None = None,
+        llm_model_name: str | None = None,
+        provider: str | None = None,
+        n_results: int | None = None,
+        top_n: int | None = None,
         sample_docs: list[str] | None = None,
         temperature: float = 0.0,
         max_tokens: int | None = None,
+        base_url: str | None = None,
     ) -> "LangChainRAG":
+        db_path = (
+            db_path
+            if db_path is not None
+            else os.environ.get("ATLAS_DB_PATH", "./atlas_db")
+        )
+        model_name = (
+            model_name
+            if model_name is not None
+            else os.environ.get("ATLAS_RERANKER_MODEL", "BAAI/bge-reranker-base")
+        )
+        llm_model_name = (
+            llm_model_name
+            if llm_model_name is not None
+            else os.environ.get("ATLAS_LLM_MODEL", "llama3.2:1b")
+        )
+        provider = (
+            provider
+            if provider is not None
+            else os.environ.get("ATLAS_PROVIDER", "ollama")
+        )
+        n_results = (
+            n_results
+            if n_results is not None
+            else int(os.environ.get("ATLAS_N_RESULTS", "10"))
+        )
+        top_n = top_n if top_n is not None else int(os.environ.get("ATLAS_TOP_N", "3"))
+        if base_url is None:
+            base_url = os.environ.get("ATLAS_OLLAMA_BASE_URL")
+
         ingestor = AtlasIngestor(db_path=db_path)
-        if ingestor.collection.count() == 0:
-            sample_kb = sample_docs or [text for _, text in SAMPLE_DOCUMENTS]
-            ingestor.add_documents(sample_kb)
+        ensure_seeded(
+            db_path=db_path,
+            texts=sample_docs or [text for _, text in SAMPLE_DOCUMENTS],
+        )
 
         ranker = AtlasReRanker(model_name=model_name)
         retriever = ChromaRetrieverAdapter(ingestor, n_results=n_results)
@@ -76,7 +108,12 @@ class LangChainRAG:
                 max_tokens
             )
 
-        llm = create_llm(provider=provider, model_name=llm_model_name, **llm_kwargs)
+        llm = create_llm(
+            provider=provider,
+            model_name=llm_model_name,
+            **llm_kwargs,
+            **({"base_url": base_url} if base_url is not None else {}),
+        )
 
         return cls(retriever, reranker, llm)
 
