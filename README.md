@@ -40,6 +40,38 @@ Answer
 python main.py
 ```
 
+### HTTP API
+
+Atlas ships a FastAPI service in `app.py`:
+
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+- `GET /health` — returns `{"status": "ok" | "degraded", "pipeline_initialized", "db_ready", "ollama_reachable"}` with status 200 when healthy and 503 when degraded. It only checks the database directory and Ollama reachability — it never loads models or initializes the pipeline. `db_ready` is true when the database directory exists at `ATLAS_DB_PATH` (the Docker entrypoint creates and seeds it at boot; `python main.py` seeds it at startup), so a fresh deploy reports healthy without any `/ask`. `pipeline_initialized` is informational-only (true after the first `/ask`).
+- `POST /ask` — body `{"query": "..."}` returns the same contract as `AtlasRAG.ask` (`{answer, source_documents}`). Ollama connection errors are returned as `"ERROR: Could not connect to Ollama (...)"` strings with status 200, matching the CLI behavior; other errors propagate as 500s.
+
+```bash
+curl http://localhost:8000/health
+curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{"query": "What is RAG?"}'
+```
+
+### Configuration
+
+`LangChainRAG.from_defaults()` (used by both `main.py` and `app.py`) resolves its settings from environment variables with explicit arguments taking precedence:
+
+| Variable | Default |
+|---|---|
+| `ATLAS_DB_PATH` | `./atlas_db` |
+| `ATLAS_RERANKER_MODEL` | `BAAI/bge-reranker-base` |
+| `ATLAS_LLM_MODEL` | `llama3.2:1b` |
+| `ATLAS_PROVIDER` | `ollama` |
+| `ATLAS_OLLAMA_BASE_URL` | (unset) |
+| `ATLAS_N_RESULTS` | `10` |
+| `ATLAS_TOP_N` | `3` |
+
+Precedence: explicit non-`None` argument > environment variable > default. `python main.py` honors all of them, e.g. `ATLAS_OLLAMA_BASE_URL=http://localhost:11434 python main.py`.
+
 ### LLM Provider Swapping
 
 Atlas uses a `create_llm` factory to configure the LLM provider:
@@ -101,6 +133,33 @@ The first query is executed as a warm-up before latency timing begins, so cold-s
 
 The cross-encoder improved Mean Reciprocal Rank (MRR) by 57%, proving it is significantly better at putting the most factual document at the #1 spot for the LLM.
 
+### Generation Evaluation
+
+Evaluate answer faithfulness and relevance against a judge LLM:
+
+```bash
+python eval/run_generation_eval.py --db-path eval/eval_db
+```
+
+The database at `--db-path` must already contain the 46-document eval corpus from `eval/eval_dataset.json`. The command validates this and refuses to run against a database holding only the sample documents (raising a clear `ValueError`), so it can never silently score answers over the wrong corpus. Seed the corpus database once with `python eval/run_eval.py --keep-db --yes`.
+
+Requires Ollama running. Uses a judge LLM (default `llama3.2:1b`) to score each generated answer: **faithfulness** measures whether every claim in the answer is supported by the retrieved context (1.0 supported / 0.0 unsupported), and **relevance** measures whether the answer addresses the question (1.0 complete / 0.0 no address). Rows where the judge returns unparseable output are flagged `judge_error: true`, excluded from the average scores, and counted in `num_judge_errors`.
+
+| Flag | Description |
+|---|---|
+| `--dataset` | Eval dataset JSON (default: `eval/eval_dataset.json`) |
+| `--output` | Results JSON (default: `eval/generation_results.json`, gitignored) |
+| `--db-path` | ChromaDB directory (default: `./atlas_db`; must contain the eval corpus, see above) |
+| `--n-results` | Candidates to retrieve (default: 10) |
+| `--top-n` | Documents after re-ranking (default: 3) |
+| `--provider` | Pipeline LLM provider (default: `ollama`) |
+| `--llm-model` | Pipeline LLM model (default: `llama3.2:1b`) |
+| `--judge-provider` | Judge LLM provider (default: `ollama`) |
+| `--judge-model` | Judge LLM model (default: `llama3.2:1b`) |
+| `--base-url` | Ollama base URL override (default: none) |
+
+`GenerationReporter` (`eval/generation_analyzer.py`) mirrors `EvalReporter`'s API for analysis: `per_query_df`, `summary_df`, `worst_queries()`, and `export_csv()`.
+
 ### Eval Analytics
 
 The `EvalReporter` class (`eval/analyzer.py`) uses pandas DataFrames for rich evaluation analysis:
@@ -132,11 +191,21 @@ reporter.compare(other_reporter)
 reporter.export_csv("exports/", which="all")
 ```
 
+### Deployment (Docker)
+
+```bash
+cp .env.example .env
+docker compose up --build -d
+```
+
+Boot order: the Ollama container pulls `llama3.2:1b` before starting; the app container pre-pulls the Hugging Face models (`all-MiniLM-L6-v2` + `BAAI/bge-reranker-base`) into the `HF_HOME` volume, creates and seeds the database at `ATLAS_DB_PATH` (`python -m scripts.seed_db`, idempotent — a no-op when the collection already has documents), then serves uvicorn. `/health` therefore reports `db_ready: true` and the healthcheck passes on a fresh deploy without any `/ask`; model weights still load lazily on the first `/ask`. For a GPU host, build the CUDA image instead: `docker build -f Dockerfile.gpu -t atlas-api-gpu .`.
+
 ### File Structure
 
 ```
 RAG-Cross-Encoder/
 ├── main.py
+├── app.py
 ├── ingest.py
 ├── reranker.py
 ├── rag_pipeline.py
@@ -144,10 +213,25 @@ RAG-Cross-Encoder/
 ├── sample_data.py
 ├── requirements.txt
 ├── requirements-dev.txt
+├── pyproject.toml
+├── LICENSE
+├── Dockerfile
+├── Dockerfile.gpu
+├── docker-compose.yml
+├── .env.example
+├── .github/workflows/ci.yml
+├── scripts/
+│   ├── __init__.py
+│   ├── entrypoint.sh
+│   ├── pre_pull.py
+│   └── seed_db.py
 │
 ├── eval/
 │   ├── run_eval.py
 │   ├── analyzer.py
+│   ├── generation_eval.py
+│   ├── generation_analyzer.py
+│   ├── run_generation_eval.py
 │   ├── eval_dataset.json
 │   └── results.json
 │
@@ -158,6 +242,12 @@ RAG-Cross-Encoder/
     ├── test_langchain_adapters.py
     ├── test_rag_pipeline.py
     ├── test_main.py
+    ├── test_app.py
     ├── test_run_eval.py
-    └── test_analyzer.py
+    ├── test_analyzer.py
+    ├── test_env_plumbing.py
+    ├── test_generation_eval.py
+    ├── test_generation_analyzer.py
+    ├── test_run_generation_eval.py
+    └── test_pre_pull.py
 ```

@@ -10,6 +10,9 @@ eval_db/
 *.csv
 exports/
 
+# Generation evaluation results
+eval/generation_results.json
+
 # Virtual environment
 .venv/
 venv/
