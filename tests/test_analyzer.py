@@ -217,9 +217,6 @@ def sample_reporter_2():
     return EvalReporter.from_dict(results_2)
 
 
-# --- Construction ---
-
-
 class TestConstruction:
     def test_from_dict_creates_reporter(self, sample_reporter):
         assert sample_reporter is not None
@@ -249,9 +246,6 @@ class TestConstruction:
         }
 
 
-# --- Per-query DataFrame ---
-
-
 class TestPerQueryDataFrame:
     def test_has_expected_columns(self, sample_reporter):
         df = sample_reporter.per_query_df
@@ -269,9 +263,6 @@ class TestPerQueryDataFrame:
 
     def test_is_dataframe(self, sample_reporter):
         assert isinstance(sample_reporter.per_query_df, pd.DataFrame)
-
-
-# --- Summary DataFrame ---
 
 
 class TestSummaryDataFrame:
@@ -294,9 +285,6 @@ class TestSummaryDataFrame:
     def test_summary_empty_results(self):
         reporter = EvalReporter.from_dict({})
         assert len(reporter.summary_df) == 0
-
-
-# --- Latency Percentiles ---
 
 
 class TestLatencyPercentiles:
@@ -331,9 +319,6 @@ class TestLatencyPercentiles:
             sample_reporter.latency_percentiles("nonexistent")
 
 
-# --- Worst Queries ---
-
-
 class TestWorstQueries:
     def test_worst_queries_returns_dataframe(self, sample_reporter):
         df = sample_reporter.worst_queries("retrieval_only", metric="mrr", n=2)
@@ -357,9 +342,6 @@ class TestWorstQueries:
         assert len(df) == 4
 
 
-# --- Difficulty Breakdown ---
-
-
 class TestDifficultyBreakdown:
     def test_difficulty_breakdown_returns_dataframe(self, sample_reporter):
         df = sample_reporter.difficulty_breakdown("retrieval_only")
@@ -373,9 +355,6 @@ class TestDifficultyBreakdown:
     def test_difficulty_breakdown_counts_add_up(self, sample_reporter):
         df = sample_reporter.difficulty_breakdown("retrieval_only")
         assert df["count"].sum() == 4
-
-
-# --- Compare ---
 
 
 class TestCompare:
@@ -443,9 +422,6 @@ class TestCompare:
         assert third["mean_precision"] == pytest.approx(0.4)
         assert third["mean_mrr"] == pytest.approx(0.6)
         assert third["mean_latency_ms"] == pytest.approx(50.0)
-
-
-# --- Export CSV ---
 
 
 class TestExportCSV:

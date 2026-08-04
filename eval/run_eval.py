@@ -13,7 +13,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from eval.analyzer import EvalReporter
-from ingest import AtlasIngestor
+from ingest import AtlasIngestor, ensure_seeded
 from reranker import AtlasReRanker
 
 
@@ -213,11 +213,10 @@ def main() -> None:
     ingestor = AtlasIngestor(db_path=args.db_path)
     if db_exists and args.keep_db:
         print(f"Clearing existing collection at {args.db_path}...")
-        existing_ids = ingestor.collection.get()["ids"]
-        if existing_ids:
-            ingestor.collection.delete(ids=existing_ids)
-    ingestor.add_documents(
-        text_list=[doc["text"] for doc in corpus], ids=[doc["id"] for doc in corpus]
+    ensure_seeded(
+        db_path=str(args.db_path),
+        texts=[doc["text"] for doc in corpus],
+        ids=[doc["id"] for doc in corpus],
     )
 
     print("Loading cross-encoder model for re-ranking...")
