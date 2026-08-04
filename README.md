@@ -198,7 +198,7 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-Boot order: the Ollama container pulls `llama3.2:1b` before starting; the app container pre-pulls the Hugging Face models (`all-MiniLM-L6-v2` + `BAAI/bge-reranker-base`) into the `HF_HOME` volume, creates and seeds the database at `ATLAS_DB_PATH` (`python -m scripts.seed_db`, idempotent — a no-op when the collection already has documents), then serves uvicorn. `/health` therefore reports `db_ready: true` and the healthcheck passes on a fresh deploy without any `/ask`; model weights still load lazily on the first `/ask`. For a GPU host, build the CUDA image instead: `docker build -f Dockerfile.gpu -t atlas-api-gpu .`.
+Boot order: the Ollama container pulls `llama3.2:1b` before starting; the app container pre-pulls the Hugging Face models (`all-MiniLM-L6-v2` + `BAAI/bge-reranker-base`) into the `HF_HOME` volume, creates and seeds the database at `ATLAS_DB_PATH` (`python -m scripts.seed_db`, idempotent — a no-op when the collection already has documents), then serves uvicorn. `/health` therefore reports `db_ready: true` and the healthcheck passes on a fresh deploy without any `/ask`; model weights still load lazily on the first `/ask`. For a GPU host, build the CUDA image instead: `docker build -f Dockerfile.gpu -t atlas-api-gpu .`. That image only accelerates if the container is granted the device at run time — `docker run --gpus all` (host needs nvidia-container-toolkit), or uncomment the `deploy.resources.reservations.devices` blocks in `docker-compose.yml` for both `atlas-api` and `ollama`; without this the app silently falls back to CPU.
 
 ### File Structure
 
