@@ -28,3 +28,6 @@ __pycache__/
 
 # Environment variables
 .env
+
+# Working design document
+DESIGN.md
