@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+venv
+.env
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+atlas_db
+eval_db
+eval/generation_results.json
+tests

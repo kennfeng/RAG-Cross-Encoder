@@ -1,0 +1,58 @@
+services:
+  ollama:
+    image: ollama/ollama:0.6.2
+    command: /bin/sh -c 'ollama list | grep -q "$${ATLAS_LLM_MODEL:-llama3.2:1b}" || ollama pull "$${ATLAS_LLM_MODEL:-llama3.2:1b}"; exec ollama serve'
+    environment:
+      ATLAS_LLM_MODEL: llama3.2:1b
+      OLLAMA_HOST: 0.0.0.0
+      OLLAMA_KEEP_ALIVE: 24h
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      retries: 5
+      start_period: 180s
+    restart: unless-stopped
+    networks: [internal]
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  atlas-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ATLAS_DB_PATH: /data/atlas_db
+      ATLAS_PROVIDER: ollama
+      ATLAS_LLM_MODEL: llama3.2:1b
+      ATLAS_RERANKER_MODEL: BAAI/bge-reranker-base
+      ATLAS_OLLAMA_BASE_URL: http://ollama:11434
+      ATLAS_N_RESULTS: 10
+      ATLAS_TOP_N: 3
+      HF_HOME: /data/hf-cache
+    volumes:
+      - atlas_db:/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      retries: 5
+      start_period: 300s
+    restart: unless-stopped
+    networks: [internal, edge]
+
+networks:
+  internal: {}
+  edge: {}
+
+volumes:
+  atlas_db: {}
+  ollama_models: {}
